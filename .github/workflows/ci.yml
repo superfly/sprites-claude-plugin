@@ -39,3 +39,18 @@ jobs:
 
       - name: Run tests
         run: python -m unittest discover --start-directory tests --verbose
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code CLI
+        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.224
+
+      - name: Validate plugin and marketplace manifests
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-config
+        run: |
+          claude plugin validate ./plugins/sprites --strict
+          claude plugin validate . --strict

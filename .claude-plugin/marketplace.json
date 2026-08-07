@@ -1,12 +1,12 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "sprites",
   "owner": {
     "name": "Fly.io",
-    "email": "support@fly.io"
+    "email": "support@fly.io",
+    "url": "https://fly.io"
   },
-  "metadata": {
-    "description": "Official Sprites plugins from Fly.io"
-  },
+  "description": "Official Sprites plugins from Fly.io",
   "plugins": [
     {
       "name": "sprites",

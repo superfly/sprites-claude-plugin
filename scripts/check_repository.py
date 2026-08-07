@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKIPPED = {".git", "__pycache__", ".pytest_cache", ".ruff_cache"}
 TEXT_SUFFIXES = {".json", ".md", ".py", ".svg", ".txt", ".yaml", ".yml"}
 MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+HTML_SRC = re.compile(r"""<(?:img|source)\b[^>]*?\bsrc=["']([^"']+)["']""", re.IGNORECASE)
 
 
 class DuplicateKeyError(ValueError):
@@ -96,10 +97,11 @@ def main() -> int:
                 errors.append(f"{relative}: invalid SVG ({exc})")
 
         if path.suffix == ".md":
-            for match in MARKDOWN_LINK.finditer(text):
-                target = local_markdown_target(match.group(1))
-                if target is not None and not (path.parent / target).resolve().exists():
-                    errors.append(f"{relative}: broken local link {target!r}")
+            for pattern in (MARKDOWN_LINK, HTML_SRC):
+                for match in pattern.finditer(text):
+                    target = local_markdown_target(match.group(1))
+                    if target is not None and not (path.parent / target).resolve().exists():
+                        errors.append(f"{relative}: broken local link {target!r}")
         if path.name == "SKILL.md":
             validate_skill(path, text, errors)
 

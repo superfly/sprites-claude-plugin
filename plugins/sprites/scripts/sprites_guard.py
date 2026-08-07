@@ -14,22 +14,26 @@ import sys
 from typing import Any
 
 
+# Keyed on the bare tool name the server actually exposes. Sprite-level tools are
+# generated from the Sprite environment API and can change between versions, so the
+# patterns tolerate separator drift but do not invent tools that have never existed.
 DESTRUCTIVE_TOOLS = (
-    r"destroy[_-]?sprite$",
-    r"delete[_-]?sprite$",
-    r"checkpoint[_-]?restore$",
-    r"restore[_-]?(sprite|checkpoint)$",
-    r"delete[_-]?checkpoint$",
-    r"policy[_-]?network[_-]?(update|set)$",
-    r"update[_-]?network[_-]?policy$",
-    r"privilege[_-]?policy",
-    r"resource[_-]?policy",
-)
-
-EXPOSURE_PATTERNS = (
-    r"make[_-]?public",
-    r'"?(is[_-]?)?public(_?url)?"?\s*:\s*(true|"true")',
-    r'"?expose[_-]?(service|port|url)"?\s*:\s*(true|"true")',
+    (
+        r"^destroy[_-]?sprite$",
+        "Destroying a Sprite permanently deletes its filesystem, services, "
+        "checkpoints, and URL. There is no undo. Confirm the exact Sprite name.",
+    ),
+    (
+        r"^checkpoint[_-]?restore$",
+        "Restoring a checkpoint discards every filesystem change made after it. "
+        "Confirm the Sprite and the checkpoint id.",
+    ),
+    (
+        r"^policy[_-]?network[_-]?update$",
+        "Updating the network policy replaces the entire rule set rather than "
+        "merging into it. Confirm that these rules are the complete intended "
+        "policy, read back from policy_network_get.",
+    ),
 )
 
 CHECKPOINT_COMMANDS = (
@@ -65,6 +69,13 @@ def matches(text: str, patterns: tuple[str, ...]) -> bool:
     return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
 
 
+def destructive_reason(name: str) -> str | None:
+    for pattern, reason in DESTRUCTIVE_TOOLS:
+        if re.search(pattern, name, re.IGNORECASE):
+            return reason
+    return None
+
+
 def tool_basename(name: str) -> str:
     return name.rsplit("__", maxsplit=1)[-1].lower()
 
@@ -91,17 +102,19 @@ def main() -> int:
         tool_input = {}
     serialized = json.dumps(tool_input, sort_keys=True).lower()
 
-    if matches(name, DESTRUCTIVE_TOOLS):
-        ask(
-            "This Sprites action may irreversibly destroy or rewind state, or "
-            "change network/resource policy. Confirm the exact Sprite and scope."
-        )
+    reason = destructive_reason(name)
+    if reason is not None:
+        ask(reason)
         return 0
 
-    if matches(serialized, EXPOSURE_PATTERNS):
+    # `http_port` is what puts a service behind the Sprite's URL. Without it the
+    # proxy keeps routing to port 8080, so the port is the exposure signal.
+    if name == "service_create" and tool_input.get("http_port") not in (None, ""):
         ask(
-            "This Sprites action appears to widen service exposure. Confirm the "
-            "intended audience, authentication, Sprite, and port before continuing."
+            "This service will answer on the Sprite's URL because http_port is "
+            f"set to {tool_input.get('http_port')!r}. The URL requires "
+            "authentication unless the Sprite was configured otherwise. Confirm "
+            "the Sprite and that the service exposes nothing sensitive."
         )
         return 0
 

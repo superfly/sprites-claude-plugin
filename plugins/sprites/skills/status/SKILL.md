@@ -2,7 +2,6 @@
 name: status
 description: Check whether the Sprites MCP integration is loaded and authenticated, then list visible Sprites without creating or destroying anything.
 disable-model-invocation: true
-argument-hint: ""
 ---
 
 # Sprites status

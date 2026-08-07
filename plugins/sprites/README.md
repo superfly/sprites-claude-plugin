@@ -1,3 +1,5 @@
+<img src="assets/sprites-logo.svg" alt="" width="72" height="58">
+
 # Sprites
 
 The Sprites plugin gives Claude Code hosted MCP access to persistent, isolated development environments, plus skills and confirmation hooks for safe remote workflows.

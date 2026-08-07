@@ -43,7 +43,7 @@ An empty Sprite list means the integration is authenticated and working.
 - Automatic workflow guidance for creating, inspecting, and operating Sprites.
 - `/sprites:status` for a read-only integration and authentication check.
 - `/sprites:smoke` for list → create → exec → approved cleanup.
-- Confirmation prompts before destroying or restoring state, changing policy, or widening service exposure.
+- Confirmation prompts before destroying a Sprite, restoring a checkpoint, replacing the network policy, or serving a new service on the Sprite's URL.
 - Checkpoint prompts before risky remote package installs, migrations, or broad destructive commands.
 
 With the plugin enabled, Claude can:
@@ -84,9 +84,9 @@ Fly-Client-Interactive: false
 
 ## Safety
 
-Treat Sprite state as durable and every Sprite URL as potentially internet-accessible. Do not expose secrets, environment dumps, tokens, arbitrary files, admin/debug endpoints, or unfiltered logs over HTTP.
+Treat Sprite state as durable. A Sprite URL requires authentication by default, and none of the plugin's MCP tools can make it public — that is a separate `--url-auth public` change made outside the plugin. Still, anything a service serves on its `http_port` is reachable at that URL, so do not expose secrets, environment dumps, tokens, arbitrary files, admin/debug endpoints, or unfiltered logs over HTTP.
 
-Destroying a Sprite is irreversible. Restoring a checkpoint discards newer filesystem state. The plugin asks for confirmation before these actions and before changes that widen access.
+Destroying a Sprite is irreversible. Restoring a checkpoint discards newer filesystem state. `policy_network_update` replaces the whole outbound rule set rather than merging, so the plugin's skill tells Claude to read the current policy and send merged rules. The plugin asks for confirmation before each of these and before a service is given an `http_port`.
 
 ## Troubleshooting
 

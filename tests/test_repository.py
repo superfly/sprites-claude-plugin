@@ -89,7 +89,21 @@ class SpritesGuardTests(unittest.TestCase):
     def test_destroy_requires_confirmation(self) -> None:
         result = self.run_guard(
             "mcp__plugin_sprites_sprites__destroy_sprite",
-            {"sprite": "mcp-test"},
+            {"name": "mcp-test"},
+        )
+        self.assert_asks(result)
+
+    def test_checkpoint_restore_requires_confirmation(self) -> None:
+        result = self.run_guard(
+            "mcp__plugin_sprites_sprites__checkpoint_restore",
+            {"sprite": "mcp-test", "checkpoint_id": "v7"},
+        )
+        self.assert_asks(result)
+
+    def test_network_policy_update_requires_confirmation(self) -> None:
+        result = self.run_guard(
+            "mcp__plugin_sprites_sprites__policy_network_update",
+            {"sprite": "mcp-test", "rules": [{"domain": "example.com", "action": "allow"}]},
         )
         self.assert_asks(result)
 
@@ -100,12 +114,32 @@ class SpritesGuardTests(unittest.TestCase):
         )
         self.assert_asks(result)
 
-    def test_public_service_requires_confirmation(self) -> None:
+    def test_service_with_http_port_requires_confirmation(self) -> None:
         result = self.run_guard(
             "mcp__plugin_sprites_sprites__service_create",
-            {"sprite": "mcp-test", "name": "web", "public_url": True},
+            {
+                "sprite": "mcp-test",
+                "service_name": "web",
+                "cmd": "python3",
+                "args": ["-m", "http.server", "3000"],
+                "http_port": 3000,
+            },
         )
         self.assert_asks(result)
+
+    def test_service_without_http_port_is_unchanged(self) -> None:
+        result = self.run_guard(
+            "mcp__plugin_sprites_sprites__service_create",
+            {"sprite": "mcp-test", "service_name": "worker", "cmd": "./worker"},
+        )
+        self.assertIsNone(result)
+
+    def test_read_only_service_inspection_is_unchanged(self) -> None:
+        result = self.run_guard(
+            "mcp__plugin_sprites_sprites__service_get",
+            {"sprite": "mcp-test", "service_name": "web"},
+        )
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":

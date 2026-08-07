@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sprites",
+  "displayName": "Sprites",
+  "version": "0.1.0",
+  "description": "Use Sprites from Claude Code to create, inspect, and operate remote isolated development environments.",
+  "author": {
+    "name": "Fly.io",
+    "email": "support@fly.io",
+    "url": "https://fly.io"
+  },
+  "homepage": "https://sprites.dev",
+  "repository": "https://github.com/superfly/sprites-claude-plugin",
+  "license": "MIT",
+  "keywords": [
+    "sprites",
+    "development-environments",
+    "mcp",
+    "claude-code",
+    "fly"
+  ]
+}

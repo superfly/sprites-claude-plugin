@@ -1,0 +1,24 @@
+{
+  "name": "sprites",
+  "owner": {
+    "name": "Fly.io",
+    "email": "support@fly.io"
+  },
+  "metadata": {
+    "description": "Official Sprites plugins from Fly.io"
+  },
+  "plugins": [
+    {
+      "name": "sprites",
+      "source": "./plugins/sprites",
+      "description": "Create, inspect, and operate remote Sprites environments from Claude Code.",
+      "category": "Developer Tools",
+      "tags": [
+        "development-environments",
+        "mcp",
+        "remote-compute",
+        "sandboxes"
+      ]
+    }
+  ]
+}

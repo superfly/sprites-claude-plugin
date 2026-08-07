@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__(plugin_sprites_sprites|sprites)__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/scripts/sprites_guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

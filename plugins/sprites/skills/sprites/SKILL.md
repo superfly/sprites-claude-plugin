@@ -30,9 +30,11 @@ Use the smallest direct tool:
 - One-off commands: `exec`; inspect or stop sessions with `exec_list` and `exec_kill`.
 - Services: `service_list`, `service_get`, `service_create`, `service_start`, `service_stop`, and `service_logs`.
 - Checkpoints: `checkpoint_create`, `checkpoint_list`, `checkpoint_get`, and `checkpoint_restore`.
-- Network policy: `policy_network_get` and `policy_network_update`.
+- Network policy: `policy_network_get` and `policy_network_update`. Update replaces the entire rule set, so read the current policy first and send the merged rules.
 
-Sprite-scoped tools require a Sprite name or id. If the user did not specify one, call `list_sprites` and select an obvious match; ask only when more than one plausible target remains.
+Sprite-scoped tools take a `sprite` parameter naming the target; `create_sprite` and `destroy_sprite` take `name`. If the user did not specify a Sprite, call `list_sprites` and select an obvious match; ask only when more than one plausible target remains.
+
+Sprite-level tools are generated from the Sprite environment API and can change between versions. Treat the tools actually offered in the session as authoritative: if a name above is missing, use the closest available tool rather than insisting on this list, and if an unfamiliar tool appears, read its schema instead of assuming it is unsupported.
 
 ## Operating principles
 

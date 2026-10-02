@@ -21,6 +21,8 @@ const REFRESH_GAP_MS = 10_000
 const WIDE_COLUMNS = 64
 const LIST_COLUMNS = 30
 const LABEL_COLUMNS = 8
+// Room for the longest checkpoint id, `Current`.
+const CHECKPOINT_ID_COLUMNS = 8
 
 // Theme keys, so the colors follow the person's light or dark theme.
 const STATUS_COLORS: Record<string, string> = { running: 'success', warm: 'warning', cold: 'inactive' }
@@ -470,7 +472,7 @@ export const register: Register = on => {
             <Box key={`row-${one.id}`} flexDirection="row" gap={1}>
               <Text color="claude">{isSelected ? '▌' : ' '}</Text>
               <Text color={statusColor(one.status)}>●</Text>
-              <Box flexGrow={1} flexShrink={1}>
+              <Box flexGrow={1} flexShrink={1} minWidth={0}>
                 {/* The selected row stays a Button: a focused element that leaves the
                     tree takes the pane's focus with it, and on desktop the next click
                     into an unfocused pane only focuses. */}
@@ -559,7 +561,7 @@ export const register: Register = on => {
         {s.services.items.map(service => (
           <Box key={`svc-${service.name}`} flexDirection="row" gap={1}>
             <Text color={service.status === 'running' ? 'success' : service.status === 'stopped' ? 'inactive' : 'warning'}>●</Text>
-            <Box flexGrow={1} flexShrink={1}>
+            <Box flexGrow={1} flexShrink={1} minWidth={0}>
               <Text wrap="truncate-end">{service.name}</Text>
             </Box>
             <Text dimColor>{service.status}</Text>
@@ -581,13 +583,19 @@ export const register: Register = on => {
         {s.checkpoints.state === 'ready' && !s.checkpoints.items.length && <Text dimColor>No checkpoints.</Text>}
         {s.checkpoints.items.map(checkpoint => (
           <Box key={`cp-${checkpoint.id}`} flexDirection="row" gap={1}>
-            <Box width={6} flexShrink={0}>
-              <Text bold>{checkpoint.id}</Text>
+            <Box width={CHECKPOINT_ID_COLUMNS} flexShrink={0}>
+              <Text bold wrap="truncate-end">
+                {checkpoint.id}
+              </Text>
             </Box>
-            <Box flexGrow={1} flexShrink={1}>
+            <Box flexGrow={1} flexShrink={1} minWidth={0}>
               <Text wrap="truncate-end">{checkpoint.comment || 'No comment'}</Text>
             </Box>
-            {checkpoint.created && <Text dimColor>{day(checkpoint.created)}</Text>}
+            {checkpoint.created && (
+              <Box flexShrink={0}>
+                <Text dimColor>{day(checkpoint.created)}</Text>
+              </Box>
+            )}
           </Box>
         ))}
       </Box>

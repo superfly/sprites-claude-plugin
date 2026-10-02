@@ -155,3 +155,87 @@ test('says how to sign in when the server needs auth', async ($, on) => {
   expect(await ui.find({ text: /Authenticate it in \/mcp/ })).toBeDefined()
   await ui.unmount()
 })
+
+for (const surface of ['terminal', 'desktop'] as const) {
+  test(`refresh resets pagination when Sprites move between pages on ${surface}`, async ($, on) => {
+    const clock = mock.clock(on)
+    const sprite = (i: number) => ({ ...SPRITES[0], id: `spr_${i}`, name: `mcp-${i}` })
+    let sprites = Array.from({ length: 40 }, (_, i) => sprite(i + 1))
+    on('mcp.connect', () => ({ value: { isConnected: true, server: 'plugin:sprites:sprites' } }))
+    on('mcp.call', (_$, e) => {
+      const offset = Number(e.args.continuation_token || 0)
+      return {
+        value: result({
+          sprites: sprites.slice(offset, offset + 20),
+          prefix: e.args.prefix,
+          next_continuation_token: offset + 20 < sprites.length ? String(offset + 20) : null,
+        }),
+      }
+    })
+
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.input({ key: 'prefix', text: 'mcp-' })
+    await clock.settle()
+    await ui.press({ key: 'more' })
+    await clock.settle()
+    expect(await ui.find({ key: 'sprite-spr_20' })).toBeDefined()
+    expect(await ui.find({ key: 'sprite-spr_40' })).toBeDefined()
+    expect(await ui.find({ key: 'more' })).toBeUndefined()
+
+    // Inserting ahead of the first page pushes Sprite 20 onto the second.
+    sprites = [sprite(0), ...sprites]
+    await clock.advance(11_000)
+    await ui.redraw({ ...PANE.props, isFocused: false })
+    await ui.redraw({ ...PANE.props, isFocused: true })
+    await clock.settle()
+    expect(await ui.find({ key: 'sprite-spr_0' })).toBeDefined()
+    expect(await ui.find({ key: 'more' })).toBeDefined()
+    await ui.press({ key: 'more' })
+    await clock.settle()
+    expect(await ui.find({ key: 'sprite-spr_20' })).toBeDefined()
+    await ui.press({ key: 'more' })
+    await clock.settle()
+    for (const one of sprites) expect(await ui.find({ key: `sprite-${one.id}` })).toBeDefined()
+    expect(await ui.findAll({ type: 'Button', text: /^mcp-/ })).toHaveLength(41)
+    expect(await ui.find({ key: 'more' })).toBeUndefined()
+    await ui.unmount()
+  })
+
+  test(`failed filter change clears the previous rows and cursor on ${surface}`, async ($, on) => {
+    const clock = mock.clock(on)
+    const calls: Record<string, unknown>[] = []
+    let fail = true
+    on('mcp.connect', () => ({ value: { isConnected: true, server: 'plugin:sprites:sprites' } }))
+    on('mcp.call', (_$, e) => {
+      calls.push(e.args)
+      if (e.args.prefix === 'other-' && fail) {
+        return { value: { content: [{ type: 'text', text: 'Temporary server failure' }], isError: true } }
+      }
+      return {
+        value: result({
+          sprites: e.args.prefix === 'other-' ? [{ ...SPRITES[1], name: 'other-db' }] : [SPRITES[0]],
+          prefix: e.args.prefix,
+          next_continuation_token: e.args.prefix === 'other-' ? null : '20',
+        }),
+      }
+    })
+
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.input({ key: 'prefix', text: 'mcp-' })
+    await clock.settle()
+    expect(await ui.find({ key: 'more' })).toBeDefined()
+    await ui.input({ key: 'prefix', text: 'other-' })
+    await clock.settle()
+    expect(await ui.find({ text: /Temporary server failure/ })).toBeDefined()
+    expect(await ui.find({ key: 'more' })).toBeUndefined()
+    expect(await ui.find({ key: 'sprite-spr_1' })).toBeUndefined()
+
+    fail = false
+    await ui.input({ key: 'prefix', text: 'other-' })
+    await clock.settle()
+    expect(calls.at(-1)).toEqual({ prefix: 'other-', continuation_token: '' })
+    expect(await ui.find({ key: 'sprite-spr_2' })).toBeDefined()
+    expect(await ui.find({ key: 'sprite-spr_1' })).toBeUndefined()
+    await ui.unmount()
+  })
+}

@@ -12,8 +12,6 @@ const COMMAND = 'sprites-inspector'
 const SERVER = 'sprites'
 const LOG_LINES = 100
 const LOG_CHARS = 10000
-// The server's page size for open_sprite_inspector.
-const PAGE_SIZE = 20
 // Focus that returns sooner than this after a listing does not list again.
 const REFRESH_GAP_MS = 10_000
 
@@ -161,8 +159,10 @@ function timeOfDay(ms: number): string {
 const statusColor = (status: string) => STATUS_COLORS[status] ?? 'warning'
 
 async function loadPage($: EngineInterface, append: boolean, nextPrefix?: string): Promise<void> {
-  const run = ++listRun
   const before = await read($, inspector)
+  // Ignore a queued Load more press after another search has reset its cursor.
+  if (append && (before.isListing || !before.cursor)) return
+  const run = ++listRun
   const prefix = append ? before.prefix : (nextPrefix ?? before.prefix).trim()
   if (!append) {
     ++selectRun
@@ -171,7 +171,7 @@ async function loadPage($: EngineInterface, append: boolean, nextPrefix?: string
   }
   await update($, inspector, s => ({
     ...s,
-    ...(append ? {} : { ...CLEARED, prefix }),
+    ...(append ? {} : { ...CLEARED, prefix, sprites: [], cursor: null, listedAt: null }),
     ...info(''),
     isListing: true,
   }))
@@ -217,15 +217,14 @@ async function refresh($: EngineInterface): Promise<void> {
     if (run !== listRun) return
     const byId = new Map(fresh.map(one => [one.id, one]))
     await update($, inspector, s => {
-      // Rows from pages after the first stay as they were.
-      const isOnePage = s.sprites.length <= PAGE_SIZE
-      const rest = isOnePage ? [] : s.sprites.slice(PAGE_SIZE).filter(old => !byId.has(old.id))
+      // Restart pagination with this page's cursor: inserts or deletions can
+      // move rows across the old page boundaries while the pane is unfocused.
       const listed = s.selected && byId.get(s.selected.id)
       return {
         ...s,
         ...(s.statusTone === 'error' ? info('') : {}),
-        sprites: [...fresh, ...rest],
-        cursor: isOnePage ? str(page.next_continuation_token) || null : s.cursor,
+        sprites: fresh,
+        cursor: str(page.next_continuation_token) || null,
         listedAt,
         selected: s.selected && listed ? { ...s.selected, status: listed.status } : s.selected,
       }

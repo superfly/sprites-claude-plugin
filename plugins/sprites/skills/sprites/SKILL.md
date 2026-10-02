@@ -26,6 +26,7 @@ Keep local and remote contexts distinct:
 Use the smallest direct tool:
 
 - List and create: `list_sprites`, `create_sprite`.
+- Read one Sprite's metadata without waking it: `get_sprite_info`.
 - Destroy: `destroy_sprite`, only after explicit delete/destroy/remove intent and the plugin confirmation prompt.
 - One-off commands: `exec`; inspect or stop sessions with `exec_list` and `exec_kill`.
 - Services: `service_list`, `service_get`, `service_create`, `service_start`, `service_stop`, and `service_logs`.
@@ -33,6 +34,8 @@ Use the smallest direct tool:
 - Network policy: `policy_network_get` and `policy_network_update`. Update replaces the entire rule set, so read the current policy first and send the merged rules.
 
 Sprite-scoped tools take a `sprite` parameter naming the target; `create_sprite` and `destroy_sprite` take `name`. If the user did not specify a Sprite, call `list_sprites` and select an obvious match; ask only when more than one plausible target remains.
+
+The Sprite Inspector pane (`/sprites-inspector`) can attach a Sprite to the conversation as a note naming its `sprite` and `sprite_id`. The most recent note is the user's "this Sprite". Pass that `sprite_id` alongside `sprite` on Sprite-scoped calls: the server then rejects a Sprite that was deleted and recreated under the same name instead of operating on the wrong one. Never substitute a different Sprite for an attached one.
 
 Sprite-level tools are generated from the Sprite environment API and can change between versions. Treat the tools actually offered in the session as authoritative: if a name above is missing, use the closest available tool rather than insisting on this list, and if an unfamiliar tool appears, read its schema instead of assuming it is unsupported.
 

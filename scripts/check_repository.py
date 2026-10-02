@@ -14,7 +14,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SKIPPED = {".git", "__pycache__", ".pytest_cache", ".ruff_cache"}
-TEXT_SUFFIXES = {".json", ".md", ".py", ".svg", ".txt", ".yaml", ".yml"}
+TEXT_SUFFIXES = {".json", ".md", ".py", ".svg", ".ts", ".tsx", ".txt", ".yaml", ".yml"}
 MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC = re.compile(r"""<(?:img|source)\b[^>]*?\bsrc=["']([^"']+)["']""", re.IGNORECASE)
 

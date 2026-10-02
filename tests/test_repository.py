@@ -59,6 +59,15 @@ class ClaudePluginRepositoryTests(unittest.TestCase):
         matcher = hooks["hooks"]["PreToolUse"][0]["matcher"]
         self.assertIn("plugin_sprites_sprites", matcher)
 
+    def test_inspector_mod_is_packaged(self) -> None:
+        hooks = load_json(PLUGIN / "hooks/hooks.json")
+        self.assertEqual(hooks["modules"], ["./register.tsx"])
+        self.assertTrue((PLUGIN / "hooks/register.tsx").is_file())
+        contract = PLUGIN / self.manifest["types"]
+        self.assertTrue(contract.is_file())
+        # The module's $.state keys live under the plugin's own name.
+        self.assertIn("sprites: { inspector: InspectorState }", contract.read_text(encoding="utf-8"))
+
 
 class SpritesGuardTests(unittest.TestCase):
     guard = PLUGIN / "scripts/sprites_guard.py"

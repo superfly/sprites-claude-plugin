@@ -45,8 +45,11 @@ jobs:
         with:
           node-version: "22"
 
+      # 2.1.287 is the first release with mods generally available: older
+      # validators reject the manifest's `types` contract, though older clients
+      # still load the plugin and ignore its hooks module.
       - name: Install Claude Code CLI
-        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.224
+        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.287
 
       - name: Validate plugin and marketplace manifests
         env:
@@ -54,3 +57,8 @@ jobs:
         run: |
           claude plugin validate ./plugins/sprites --strict
           claude plugin validate . --strict
+
+      - name: Test the Sprite Inspector mod
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-config
+        run: claude plugin test ./plugins/sprites

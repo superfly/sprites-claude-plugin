@@ -56,9 +56,12 @@ jobs:
           CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-config
         run: |
           claude plugin validate ./plugins/sprites --strict
+          claude plugin validate ./plugins/fly --strict
           claude plugin validate . --strict
 
-      - name: Test the Sprite Inspector mod
+      - name: Test both Inspector mods
         env:
           CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-config
-        run: claude plugin test ./plugins/sprites
+        run: |
+          claude plugin test ./plugins/sprites
+          claude plugin test ./plugins/fly

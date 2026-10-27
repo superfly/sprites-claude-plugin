@@ -1,4 +1,4 @@
-<img src="assets/fly-icon.svg" alt="Fly.io" width="72" height="72">
+![Fly.io](assets/fly-icon.svg)
 
 # Fly
 
@@ -42,6 +42,23 @@ Current Fly MCP operations cover existing apps, Machine creation and lifecycle, 
 The remote server is `https://mcp.fly.io`. Calls send the arguments needed for the requested operation to Fly.io and its product backends; those arguments can include commands, file content, and secret values when the user requests those operations. The plugin adds no separate telemetry service or credential store. It sends the fixed client attribution headers `Fly-Client-Agent: claude-code` and `Fly-Client-Interactive: false`, containing no user, machine, repository, or organization identifiers.
 
 The Inspector stores selected Sprite metadata and explicitly requested logs in Claude Code's session state. Using **Use in chat** appends the selected resource identity to the conversation. Treat logs and command output as potentially sensitive, and avoid exposing configuration values or secrets in summaries.
+
+### Inspector tool calls and local hooks
+
+The Inspector calls five read-only tools through the declared `fly` MCP connection, directly from its UI handlers:
+
+| Tool | When called | Arguments sent to Fly |
+| --- | --- | --- |
+| `open_sprite_inspector` | Opening the Inspector, searching, loading another page, or refreshing after focus returns | Name prefix and pagination token |
+| `get_sprite_info` | Selecting a Sprite | Sprite name and ID |
+| `service_list` and `checkpoint_list` | Requesting runtime details | Sprite name and ID |
+| `service_logs` | Requesting a service's logs | Sprite name and ID, service name, 100-line limit, and `0s` streaming duration |
+
+These calls do not require a model-generated tool request. The mod does not execute shell commands, read workspace files, or send data to another server. It reads its own session state to build these arguments. It displays tool results as data; returned text does not choose tools or executable code. Log display is limited to 10,000 characters. Opening an HTTPS link is a separate user action.
+
+The mod's `session.start` handler registers `/fly-sprites-inspector` and resets pending UI requests after reload. Its `command.run` handler handles only that command, and its `ui.render` handler draws only the Inspector pane. **Use in chat** appends a resource identity and instructions to verify it through Fly before operating on it; it does not execute an operation.
+
+The separate Python `PreToolUse` hook reads the proposed tool name and arguments from standard input, checks only the Fly plugin's Claude Code tool namespace, and emits an approval request for the operations described below. It does not run the proposed command, read workspace files, make network requests, or store the input. It adds no package installation step.
 
 The Inspector requires Claude Code 2.1.287 or later. It falls back to a text listing when a pane cannot be drawn. The hook and mod run in Claude Code; they are not a substitute for server authorization on other Claude surfaces. The confirmation hook requires Python 3.
 

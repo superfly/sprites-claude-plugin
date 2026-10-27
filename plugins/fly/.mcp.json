@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "fly": {
+      "type": "http",
+      "url": "https://mcp.fly.io",
+      "headers": {
+        "Fly-Client-Interactive": "false",
+        "Fly-Client-Agent": "claude-code"
+      }
+    }
+  }
+}

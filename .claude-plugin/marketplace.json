@@ -6,7 +6,7 @@
     "email": "support@fly.io",
     "url": "https://fly.io"
   },
-  "description": "Official Sprites plugins from Fly.io",
+  "description": "Official Fly.io and Sprites plugins",
   "plugins": [
     {
       "name": "sprites",
@@ -18,6 +18,19 @@
         "mcp",
         "remote-compute",
         "sandboxes"
+      ]
+    },
+    {
+      "name": "fly",
+      "source": "./plugins/fly",
+      "description": "Manage Fly.io apps, Machines, volumes, secrets, and Sprites through Fly MCP.",
+      "category": "Developer Tools",
+      "tags": [
+        "fly-io",
+        "cloud",
+        "machines",
+        "sprites",
+        "mcp"
       ]
     }
   ]

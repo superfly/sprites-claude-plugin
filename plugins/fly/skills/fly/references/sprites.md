@@ -21,6 +21,10 @@ Use the dedicated file tools rather than shell quoting tricks:
 - `file_delete` takes explicit `recursive` and `asRoot` flags. Confirm the path and scope before deletion.
 - `file_rename` and `file_copy` take `source` and `dest`; inspect the destination before overwriting. Use the current schema for required flags, including `workingDir` and `asRoot`.
 
+`exec` returns the command's output but not its exit status; judge success from the output and say the status was not reported.
+
+If `exec` or a file tool fails with "is not assigned to compute" while `get_sprite_info` shows the Sprite running, the server cannot yet route runtime calls to that Sprite's platform. Retrying will not help: report the Sprite name and ID rather than recreating or destroying it.
+
 For repositories, cloning is usually simpler than transferring many individual files. Use an authorized private-code access method; never invent credentials. Create or verify a checkpoint before package upgrades, migrations, bulk changes, or overwriting important data.
 
 ## Services and logs

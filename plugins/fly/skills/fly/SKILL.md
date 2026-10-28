@@ -37,4 +37,4 @@ Account directory access is separate from product access. `list_organizations`, 
 - New catalogue entries never expand consent. Stay within the authorized operations and ask for fresh consent only if the requested task needs more access.
 - Report what changed, exact resource identifiers, verification results, and anything still unverified. Distinguish local files, Sprite filesystems, and Fly Machine/volume state.
 
-The current server does not provide app creation, full deployment workflows, general Machine configuration updates, or organization administration. Explain that limit when relevant; do not invent tools or silently fall back to a CLI.
+The current server does not provide app creation, full deployment workflows, general Machine configuration updates, organization administration, or Managed Postgres deletion, user or password management, backup restore, or arbitrary SQL. Explain that limit when relevant; do not invent tools or silently fall back to a CLI.

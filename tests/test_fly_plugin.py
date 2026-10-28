@@ -143,18 +143,49 @@ class FlyGuardTests(unittest.TestCase):
                 self.assertNotIn(secret, json.dumps(output))
 
     def test_postgres_writes_ask_without_echoing_input(self) -> None:
+        sentinel = "sensitive-test-input"
+        args = {key: sentinel for key in ["org_slug", "cluster_id", "source_cluster_id", "name",
+                                          "plan", "region", "database", "extension"]}
         for name in ["create_postgres_cluster", "fork_postgres_cluster", "create_postgres_backup",
                      "create_postgres_database", "enable_postgres_extension"]:
             with self.subTest(tool=name):
-                output = self.assert_asks(name, {"name": "sensitive-test-input"})
+                output = self.assert_asks(name, args)
                 self.assertIn("Postgres", output["permissionDecisionReason"])
-                self.assertNotIn("sensitive-test-input", json.dumps(output))
-                self.assertIsNone(self.run_guard(name, {}, "mcp__plugin_other_fly__"))
+                self.assertNotIn(sentinel, json.dumps(output))
+
+    def test_postgres_query_text_asks(self) -> None:
+        for name in ["list_postgres_active_queries", "list_postgres_slow_queries"]:
+            with self.subTest(tool=name):
+                output = self.assert_asks(name, {"cluster_id": "mpg-test", "database": "app"})
+                self.assertIn("query text", output["permissionDecisionReason"])
 
     def test_postgres_reads_keep_normal_permissions(self) -> None:
         for name in ["list_postgres_clusters", "get_postgres_plans", "get_postgres_cluster",
                      "list_postgres_backups", "list_postgres_databases", "list_postgres_extensions",
-                     "list_postgres_users", "list_postgres_active_queries", "list_postgres_slow_queries"]:
+                     "list_postgres_users"]:
+            with self.subTest(tool=name):
+                self.assertIsNone(self.run_guard(name, {}))
+
+    def test_documented_writes_ask_unless_reviewed(self) -> None:
+        reference = (PLUGIN / "skills/fly/references/tools.md").read_text()
+        documented = set(re.findall(r"^\| `([a-z_]+)` \|", reference, re.MULTILINE))
+        reviewed = {"checkpoint_create", "create_sprite", "create_volume_snapshot", "file_write",
+                    "service_create", "service_start", "exec"}
+        self.assertLessEqual(reviewed, documented)
+        read = re.compile(r"^(get|list|search|open|wait)_|_(get|list|read|logs|info)$")
+        for name in sorted(documented):
+            with self.subTest(tool=name):
+                if name in reviewed:
+                    self.assertIsNone(self.run_guard(name, {}))
+                elif not read.search(name):
+                    self.assert_asks(name, {})
+
+    def test_unreviewed_writes_ask_by_default(self) -> None:
+        for name in ["delete_postgres_cluster", "restore_postgres_backup", "rotate_app_certificate",
+                     "checkpoint_delete", "service-restart"]:
+            with self.subTest(tool=name):
+                self.assertIn("not reviewed", self.assert_asks(name, {})["permissionDecisionReason"])
+        for name in ["list_postgres_roles", "get_app_releases", "exec_list", "policy_network_get"]:
             with self.subTest(tool=name):
                 self.assertIsNone(self.run_guard(name, {}))
 
@@ -183,8 +214,10 @@ class FlyGuardTests(unittest.TestCase):
 
     def test_other_connections_are_untouched_even_if_called_directly(self) -> None:
         for prefix in ["mcp__plugin_sprites_sprites__", "mcp__fly__", "mcp__plugin_other_fly__"]:
-            with self.subTest(prefix=prefix):
-                self.assertIsNone(self.run_guard("destroy_sprite", {"name": "mcp-test"}, prefix))
+            for name in ["destroy_sprite", "create_postgres_cluster", "list_postgres_active_queries",
+                         "delete_postgres_cluster"]:
+                with self.subTest(prefix=prefix, tool=name):
+                    self.assertIsNone(self.run_guard(name, {"name": "mcp-test"}, prefix))
 
     def test_invalid_payload_does_not_crash(self) -> None:
         for payload in ["", "invalid-json", "[]", '{"tool_name": "mcp__plugin_fly_fly__delete_app", "tool_input": null}']:

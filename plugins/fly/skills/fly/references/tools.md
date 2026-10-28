@@ -93,7 +93,7 @@ The server exposes its tools dynamically; this plugin does not register a fixed 
 
 ## Managed Postgres (14 tools)
 
-Tools must be available and authorized by the connection. See the [Managed Postgres workflow](postgres.md) for target selection, asynchronous operations, and query privacy. These tools do not delete resources, modify users/passwords, or return passwords.
+Tools must be available and authorized by the connection. See the [Managed Postgres workflow](postgres.md) for target selection, asynchronous operations, query privacy, and unsupported operations.
 
 | Tool | Purpose and constraints |
 | --- | --- |

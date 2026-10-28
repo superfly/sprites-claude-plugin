@@ -36,6 +36,12 @@ DESTRUCTIVE_TOOLS = (
         "before retrying an uncertain result; these tools do not provide deletion or rollback.",
     ),
     (
+        r"^(list_postgres_active_queries|list_postgres_slow_queries)$",
+        "This returns full SQL query text, which can contain credentials, literal "
+        "values, or personal data. Confirm the cluster or database and that query "
+        "diagnostics are needed. Summarize timings and patterns without repeating literals.",
+    ),
+    (
         r"^delete_app$",
         "Deleting a Fly app permanently removes the app and can disrupt or delete "
         "its resources. Inspect it first and confirm the exact app and organization.",
@@ -117,6 +123,24 @@ DESTRUCTIVE_TOOLS = (
     ),
 )
 
+# The server adds tools without a plugin release, so a write this file has not
+# reviewed still asks. Fly tools lead with the verb (`create_machine`) and Sprite
+# tools end with it (`checkpoint_create`), so either position counts.
+WRITE_VERBS = frozenset({
+    "add", "attach", "cancel", "clone", "copy", "cordon", "create", "delete", "deploy",
+    "destroy", "detach", "disable", "enable", "extend", "fork", "grant", "import", "kill",
+    "move", "promote", "purge", "reclaim", "release", "remove", "rename", "reset",
+    "restart", "restore", "revoke", "rotate", "run", "scale", "set", "signal", "start",
+    "stop", "suspend", "uncordon", "update", "upgrade", "write",
+})
+
+# Reviewed writes that keep Claude's normal permission policy, or that main()
+# checks against their input instead.
+REVIEWED_WRITES = frozenset({
+    "checkpoint_create", "create_sprite", "create_volume_snapshot", "file_write",
+    "service_create", "service_start",
+})
+
 CHECKPOINT_COMMANDS = (
     r"\brm\s+-rf\b",
     r"\bdrop\s+database\b",
@@ -155,6 +179,13 @@ def destructive_reason(name: str) -> str | None:
         if re.search(pattern, name, re.IGNORECASE):
             return reason
     return None
+
+
+def unreviewed_write(name: str) -> bool:
+    words = re.split(r"[_-]", name)
+    if words[0] not in WRITE_VERBS and words[-1] not in WRITE_VERBS:
+        return False
+    return name.replace("-", "_") not in REVIEWED_WRITES
 
 
 def tool_basename(name: str) -> str:
@@ -198,6 +229,12 @@ def main() -> int:
         tool_input = {}
 
     reason = destructive_reason(name)
+    if reason is None and unreviewed_write(name):
+        reason = (
+            "This tool appears to change Fly resources, and this plugin has not "
+            "reviewed it yet. Confirm the exact target and effect from the live "
+            "schema before continuing."
+        )
     if reason is not None:
         ask(reason)
         return 0

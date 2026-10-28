@@ -14,7 +14,7 @@ Keep every call on the Fly plugin connection. Read [authentication](../fly/refer
 1. Call `get_fly_context` and inspect bindings and scopes.
 2. List apps, Managed Postgres clusters, and/or Sprites only where the tools are available and the grant permits. Use exact organization slugs. Empty lists are valid; mark ungranted products as skipped.
 3. For an authorized app, read its metadata and permitted Machine/volume summaries. Read secret names or networking metadata only if requested and granted; never fetch sensitive configuration as a smoke check.
-4. For an authorized Managed Postgres organization, list clusters and inspect a selected cluster with `get_postgres_cluster`. Use the live schemas and exact discovered identifiers. Do not fetch query text, provision a cluster, create a backup/database, or enable extensions as a smoke check.
+4. If step 2 returned Managed Postgres clusters, inspect one of them with `get_postgres_cluster`. Use the live schema and the exact identifier from that listing. Do not fetch query text, provision a cluster, create a backup/database, or enable extensions as a smoke check.
 5. Report each attempted read's outcome and skipped checks. Do not create billable resources or change anything.
 
 ## Explicit disposable Sprite check

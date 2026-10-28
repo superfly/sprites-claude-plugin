@@ -12,13 +12,14 @@ Keep every call on the Fly plugin connection. Read [authentication](../fly/refer
 ## Default: read-only
 
 1. Call `get_fly_context` and inspect bindings and scopes.
-2. List apps and/or Sprites only where the grant permits. Use exact organization slugs. Empty lists are valid; mark ungranted products as skipped.
+2. List apps, Managed Postgres clusters, and/or Sprites only where the tools are available and the grant permits. Use exact organization slugs. Empty lists are valid; mark ungranted products as skipped.
 3. For an authorized app, read its metadata and permitted Machine/volume summaries. Read secret names or networking metadata only if requested and granted; never fetch sensitive configuration as a smoke check.
-4. Report each attempted read's outcome and skipped checks. Do not create billable resources or change anything.
+4. If step 2 returned Managed Postgres clusters, inspect one of them with `get_postgres_cluster`. Use the live schema and the exact identifier from that listing. Do not fetch query text, provision a cluster, create a backup/database, or enable extensions as a smoke check.
+5. Report each attempted read's outcome and skipped checks. Do not create billable resources or change anything.
 
 ## Explicit disposable Sprite check
 
-Only perform these steps if `$ARGUMENTS` includes the exact flag `--create-sprite`. This flag requests Sprite creation, file write/read, and a harmless exec; it does not authorize deletion or Fly app/Machine/volume changes.
+Only perform these steps if `$ARGUMENTS` includes the exact flag `--create-sprite`. This flag requests Sprite creation, file write/read, and a harmless exec; it does not authorize deletion, Fly app/Machine/volume changes, or Managed Postgres changes.
 
 1. Verify the grant permits Sprite creation, file write/read, and exec. Read its prefix and creation cap with `get_fly_context`. If unavailable, stop the write check and report the missing permission.
 2. Create a uniquely named disposable Sprite under the permitted prefix. Record the returned name and ID immediately. After an uncertain response, inspect before retrying creation.

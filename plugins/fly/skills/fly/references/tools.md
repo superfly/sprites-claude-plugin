@@ -1,8 +1,8 @@
 # Fly MCP tool reference
 
-Snapshot checked against [the public Fly MCP guide](https://mcp.fly.io/guide.md) on 2026-10-26. Use the live session schemas for arguments and available tools. This list does not expand the connection's grant.
+Managed Postgres checked against [the public Fly MCP guide](https://mcp.fly.io/guide.md) on 2026-10-28; other tool groups were checked on 2026-10-26. Use the live session schemas for arguments and available tools. This list does not expand the connection's grant.
 
-The server exposes its tools dynamically; this plugin does not register a fixed subset or implement a second MCP bridge. App creation, full deployments, general Machine configuration updates, Managed Postgres provisioning, and organization administration are outside the current tool set.
+The server exposes its tools dynamically; this plugin does not register a fixed subset or implement a second MCP bridge. App creation, full deployments, general Machine configuration updates, and organization administration are outside the current tool set.
 
 
 ## Account and context (4 tools)
@@ -90,6 +90,27 @@ The server exposes its tools dynamically; this plugin does not register a fixed 
 | --- | --- |
 | `list_app_certificates` | List certificates for app. Requires explicit fly:certificates:read authorization. |
 | `get_app_certificate` | Get certificate details. Requires explicit fly:certificates:read authorization. |
+
+## Managed Postgres (14 tools)
+
+Tools must be available and authorized by the connection. See the [Managed Postgres workflow](postgres.md) for target selection, asynchronous operations, query privacy, and unsupported operations.
+
+| Tool | Purpose and constraints |
+| --- | --- |
+| `list_postgres_clusters` | List Managed Postgres clusters for an organization. |
+| `get_postgres_plans` | List the Managed Postgres plans available when creating or forking a cluster in an organization, cheapest first. |
+| `get_postgres_cluster` | Get details of a specific Managed Postgres cluster, including its status and, once it is ready, its endpoints. |
+| `create_postgres_cluster` | Create a Managed Postgres cluster in the organization. Provisioning is asynchronous: poll get_postgres_cluster until its status is ready before creating databases or enabling extensions. |
+| `fork_postgres_cluster` | Fork a ready Managed Postgres cluster into a new cluster that inherits the source's settings, on the source's plan unless plan is given. The source cluster is left unchanged, and the fork is provisioned asynchronously. |
+| `list_postgres_backups` | List all backups associated with a specific cluster. |
+| `create_postgres_backup` | Create a backup for a specific cluster. The backup runs asynchronously and is rejected if one is already in progress. |
+| `list_postgres_databases` | List all databases within a specific cluster. |
+| `list_postgres_extensions` | List all extensions available within a specific database, indicating which are installed. |
+| `create_postgres_database` | Create a database within a specific cluster. |
+| `enable_postgres_extension` | Enable a Postgres extension within a specific database. PostGIS extensions require a PostGIS-enabled cluster. |
+| `list_postgres_users` | List all Postgres users within a specific cluster. |
+| `list_postgres_active_queries` | List active queries in the supplied database. Returns full query text and durations in seconds. |
+| `list_postgres_slow_queries` | List the top 20 queries by cumulative total execution time, excluding the postgres database. Uses the latest available metrics within the lookback range; statistics are cumulative PostgreSQL counters, not deltas over that range. Returns full query text and execution times in seconds. |
 
 ## Discovery and lifecycle (6 tools)
 

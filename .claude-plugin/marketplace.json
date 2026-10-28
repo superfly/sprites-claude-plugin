@@ -23,7 +23,7 @@
     {
       "name": "fly",
       "source": "./plugins/fly",
-      "description": "Manage Fly.io apps, Machines, volumes, secrets, and Sprites through Fly MCP.",
+      "description": "Manage Fly.io apps, Machines, volumes, secrets, Managed Postgres, and Sprites through Fly MCP.",
       "category": "Developer Tools",
       "tags": [
         "fly-io",

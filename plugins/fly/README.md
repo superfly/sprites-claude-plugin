@@ -2,7 +2,7 @@
 
 # Fly
 
-Manage Fly.io apps, Machines, volumes, app secrets, and Sprites from Claude Code through the hosted [Fly MCP](https://mcp.fly.io). The plugin includes workflow guidance, browser OAuth, confirmation hooks, and a read-only Sprite Inspector. No Fly or Sprites CLI is required.
+Manage Fly.io apps, Machines, volumes, app secrets, Managed Postgres, and Sprites from Claude Code through the hosted [Fly MCP](https://mcp.fly.io). The plugin includes workflow guidance, browser OAuth, confirmation hooks, and a read-only Sprite Inspector. No Fly or Sprites CLI is required.
 
 ## Install
 
@@ -24,18 +24,18 @@ claude --plugin-dir ./plugins/fly
 
 ## First use
 
-Run `/fly:status`. If authorization is requested, open `/mcp`, select the plugin-provided `fly` server, and complete browser consent. Choose the organizations, existing apps, and Sprites permissions needed for your work. The status command reports the authorized resource bindings and restrictions before listing permitted resources. Empty lists are valid; an ungranted product is reported as unavailable.
+Run `/fly:status`. If authorization is requested, open `/mcp`, select the plugin-provided `fly` server, and complete browser consent. Choose the organizations, existing apps, Managed Postgres, and Sprites permissions needed for your work. The status command reports the authorized resource bindings and restrictions before listing permitted resources. Product access is independent; Managed Postgres workflows run only when the tools are available and the grant permits them. Empty lists are valid; an ungranted product is reported as unavailable.
 
 New tools do not expand your grant. The server enforces access, and Claude's tool approvals are an additional control. Tokens are handled by the client's OAuth flow; never paste tokens into chat or shell commands.
 
 ## Commands and workflows
 
-- Ask Claude to inspect or operate an authorized Fly resource. The `fly` skill covers account context, apps, Machines, volumes, secrets, networking metadata, and Sprites.
+- Ask Claude to inspect or operate an authorized Fly resource. The `fly` skill covers account context, apps, Machines, volumes, secrets, Managed Postgres, networking metadata, and Sprites.
 - `/fly:status` checks authorization and lists resources without mutations or Sprite runtime reads.
 - `/fly:smoke` checks authorized read paths. `/fly:smoke --create-sprite` additionally creates a disposable Sprite, writes and reads a small file, and runs a command. Cleanup needs explicit approval; `--keep` retains it.
 - `/fly-sprites-inspector [name prefix]` browses Sprites over the Fly connection. Services, checkpoints, and logs load only on request and may wake a Sprite. **Use in chat** attaches the exact Sprite ID to the conversation.
 
-Current Fly MCP operations cover existing apps, Machine creation and lifecycle, leases, memory and metadata, volumes and snapshots, secret updates, and the full Sprites tool set including file operations. IP addresses and certificates are read-only. App creation, full deployment workflows, general Machine configuration updates, Managed Postgres provisioning, and organization administration are not currently offered. See the [tool reference](skills/fly/references/tools.md) and the live server schemas for the exact available operations.
+Current Fly MCP operations cover existing apps, Machine creation and lifecycle, leases, memory and metadata, volumes and snapshots, secret updates, Managed Postgres clusters, plans, backups, databases, extensions and query diagnostics, and the full Sprites tool set including file operations. IP addresses and certificates are read-only. Managed Postgres tools do not delete resources, change users or passwords, or return passwords. See the [Managed Postgres workflow](skills/fly/references/postgres.md) for provisioning, completion checks, and handling sensitive query text. App creation, full deployment workflows, general Machine configuration updates, and organization administration are not currently offered. See the [tool reference](skills/fly/references/tools.md) and the live server schemas for the exact available operations.
 
 ## Runtime and data handling
 
@@ -80,9 +80,9 @@ In Claude Code auto mode, Inspector button calls may need explicit permission. A
 
 ## Operational safeguards
 
-The hook requests confirmation for destructive operations, billable Machine/volume creation or expansion, Machine lifecycle and configuration changes, leases, Machine exec, secret changes, Sprite file deletion/copy/move, stopping Sprite work, checkpoint restores, network-policy replacement, and services configured with an HTTP port. Recognized risky Sprite exec commands prompt for a checkpoint. Other calls retain Claude's normal permission policy; the hook is not a complete shell analyzer or authorization boundary.
+The hook requests confirmation for destructive operations, billable Machine/volume creation or expansion, Machine lifecycle and configuration changes, Managed Postgres cluster creation/forking, backup and database creation, extension changes, leases, Machine exec, secret changes, Sprite file deletion/copy/move, stopping Sprite work, checkpoint restores, network-policy replacement, and services configured with an HTTP port. Recognized risky Sprite exec commands prompt for a checkpoint. Other calls retain Claude's normal permission policy; the hook is not a complete shell analyzer or authorization boundary.
 
-Before making changes, identify the exact app, organization, Machine, volume, or Sprite. After a write times out, inspect the result before retrying: the operation may already have completed. Sprite checkpoints do not back up Fly Machine root filesystems or volumes.
+Before making changes, identify the exact app, organization, Machine, volume, Managed Postgres cluster/database, or Sprite. After a write times out, inspect the result before retrying: the operation may already have completed. Sprite checkpoints do not back up Fly Machine root filesystems, volumes, or Managed Postgres data.
 
 See [authentication](skills/fly/references/auth.md), [operational safety](skills/fly/references/safety.md), [Fly MCP documentation](https://mcp.fly.io), [Fly.io privacy policy](https://fly.io/legal/privacy-policy/), and [support](https://fly.io/support/).
 

@@ -7,7 +7,7 @@ Use only the plugin-provided `fly` HTTP MCP server at `https://mcp.fly.io`. Clau
 1. Verify `fly@sprites` is installed and enabled in `/plugin`.
 2. Run `/reload-plugins` or restart Claude Code.
 3. Inspect `/mcp` and authenticate the plugin-provided `fly` server when requested.
-4. Complete browser consent for the intended organizations, existing apps, and Sprites permissions. Organization SSO may require browser verification.
+4. Complete browser consent for the intended organizations, existing apps, Managed Postgres, and Sprites permissions. Organization SSO may require browser verification.
 5. Call `get_fly_context` and report the authorized bindings and restrictions.
 
 For local development, load `./plugins/fly` with `claude --plugin-dir` from the repository root. The marketplace retains the historical `sprites` identifier; that is not the plugin's server name.
@@ -16,7 +16,7 @@ For local development, load `./plugins/fly` with `claude --plugin-dir` from the 
 
 If a call is rejected before execution because authentication is required, direct the user to `/mcp` to complete sign-in and retry once. For a timed-out mutation, inspect state before any retry. If access was revoked, complete fresh consent rather than copying an old token.
 
-If a resource is missing or a tool is denied, inspect `get_fly_context`. Listing organizations does not grant access to their apps. A grant may cover Fly apps without Sprites, Sprites without Fly apps, or both. An ungranted product is not a broken connection. Do not switch to the Sprites-only connection to work around a Fly grant restriction.
+If a resource is missing or a tool is denied, inspect `get_fly_context`. Listing organizations does not grant product access. Fly app, Managed Postgres, and Sprites access can be granted independently. Check the product-specific bindings and scopes rather than inferring database access from an app or organization listing. An ungranted product is not a broken connection. Do not switch to the Sprites-only connection to work around a Fly grant restriction.
 
 ## Sprite restrictions
 

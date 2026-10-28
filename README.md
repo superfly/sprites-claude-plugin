@@ -7,7 +7,7 @@ This marketplace contains two independent plugins:
 | Fly | `/plugin install fly@sprites` | `https://mcp.fly.io` | [Fly plugin](plugins/fly/README.md) |
 | Sprites | `/plugin install sprites@sprites` | `https://sprites.dev/mcp` | [Sprites plugin](plugins/sprites/README.md) |
 
-Add the marketplace with `/plugin marketplace add superfly/sprites-claude-plugin`, then install the plugin you want. The marketplace keeps its `sprites` identifier. The Fly plugin is a separate package with its own OAuth connection, `/fly:status`, `/fly:smoke`, and `/fly-sprites-inspector` commands. It covers existing Fly apps, Machines, volumes, secrets, and Sprites. Both plugins can be installed; nothing renames, replaces, or migrates an existing Sprites installation.
+Add the marketplace with `/plugin marketplace add superfly/sprites-claude-plugin`, then install the plugin you want. The marketplace keeps its `sprites` identifier. The Fly plugin is a separate package with its own OAuth connection, `/fly:status`, `/fly:smoke`, and `/fly-sprites-inspector` commands. It covers existing Fly apps, Machines, volumes, secrets, Managed Postgres, and Sprites. Both plugins can be installed; nothing renames, replaces, or migrates an existing Sprites installation.
 
 The Fly plugin source is under `plugins/fly/` for a separate directory submission. Adding it here does not publish it to Anthropic's directory. See its [README](plugins/fly/README.md) for supported operations, setup, and validation.
 

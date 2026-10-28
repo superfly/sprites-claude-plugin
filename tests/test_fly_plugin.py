@@ -142,6 +142,22 @@ class FlyGuardTests(unittest.TestCase):
                 output = self.assert_asks(name, args)
                 self.assertNotIn(secret, json.dumps(output))
 
+    def test_postgres_writes_ask_without_echoing_input(self) -> None:
+        for name in ["create_postgres_cluster", "fork_postgres_cluster", "create_postgres_backup",
+                     "create_postgres_database", "enable_postgres_extension"]:
+            with self.subTest(tool=name):
+                output = self.assert_asks(name, {"name": "sensitive-test-input"})
+                self.assertIn("Postgres", output["permissionDecisionReason"])
+                self.assertNotIn("sensitive-test-input", json.dumps(output))
+                self.assertIsNone(self.run_guard(name, {}, "mcp__plugin_other_fly__"))
+
+    def test_postgres_reads_keep_normal_permissions(self) -> None:
+        for name in ["list_postgres_clusters", "get_postgres_plans", "get_postgres_cluster",
+                     "list_postgres_backups", "list_postgres_databases", "list_postgres_extensions",
+                     "list_postgres_users", "list_postgres_active_queries", "list_postgres_slow_queries"]:
+            with self.subTest(tool=name):
+                self.assertIsNone(self.run_guard(name, {}))
+
     def test_machine_exec_is_guarded_even_for_unrecognized_commands(self) -> None:
         output = self.assert_asks("exec_machine_command", {
             "app_name": "production", "machine_id": "a" * 14,

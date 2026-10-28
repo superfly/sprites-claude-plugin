@@ -19,6 +19,23 @@ from typing import Any
 # patterns tolerate separator drift but do not invent tools that have never existed.
 DESTRUCTIVE_TOOLS = (
     (
+        r"^(create_postgres_cluster|fork_postgres_cluster)$",
+        "This creates a billable Managed Postgres cluster. Confirm the organization, "
+        "plan, configuration, and source cluster for a fork. Provisioning is asynchronous; "
+        "verify readiness before further writes. No MPG deletion tool is available for cleanup.",
+    ),
+    (
+        r"^create_postgres_backup$",
+        "Confirm the Managed Postgres cluster and backup request. Check for an existing "
+        "backup in progress, and verify completion before relying on the backup.",
+    ),
+    (
+        r"^(create_postgres_database|enable_postgres_extension)$",
+        "This changes Managed Postgres database state. Confirm the ready cluster, "
+        "database, and requested database creation or extension. Check current state "
+        "before retrying an uncertain result; these tools do not provide deletion or rollback.",
+    ),
+    (
         r"^delete_app$",
         "Deleting a Fly app permanently removes the app and can disrupt or delete "
         "its resources. Inspect it first and confirm the exact app and organization.",

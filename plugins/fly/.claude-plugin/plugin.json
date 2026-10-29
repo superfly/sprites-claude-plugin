@@ -15,6 +15,7 @@
   "types": "./types/index.d.ts",
   "keywords": [
     "fly",
+    "fly.io",
     "fly-io",
     "machines",
     "volumes",

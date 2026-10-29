@@ -23,15 +23,22 @@ Keep local and remote contexts distinct:
 
 ## Tool map
 
-Use the smallest direct tool:
+Sprites MCP (`https://sprites.dev/mcp`) exposes **24** tools (see `superfly/sprites-mcp` README). Use the smallest direct tool that is present in this session's schema:
+
+### Sprites MCP (24)
 
 - List and create: `list_sprites`, `create_sprite`.
-- Read one Sprite's metadata without waking it: `get_sprite_info`.
 - Destroy: `destroy_sprite`, only after explicit delete/destroy/remove intent and the plugin confirmation prompt.
 - One-off commands: `exec`; inspect or stop sessions with `exec_list` and `exec_kill`.
+- Files: `file_list`, `file_read`, `file_write`, `file_copy`, `file_rename`, `file_delete` (`workingDir` + path flags per live schema).
 - Services: `service_list`, `service_get`, `service_create`, `service_start`, `service_stop`, and `service_logs`.
 - Checkpoints: `checkpoint_create`, `checkpoint_list`, `checkpoint_get`, and `checkpoint_restore`.
 - Network policy: `policy_network_get` and `policy_network_update`. Update replaces the entire rule set, so read the current policy first and send the merged rules.
+
+### Fly MCP / host extensions (only if present)
+
+- Read one Sprite's metadata without waking it: `get_sprite_info` — only if present in this session's schema / Fly MCP connection.
+- Composer / Inspector helpers such as `search_sprite_mentions` or `open_sprite_inspector` — only if present; otherwise summarize with list/inspection tools in chat.
 
 Sprite-scoped tools take a `sprite` parameter naming the target; `create_sprite` and `destroy_sprite` take `name`. If the user did not specify a Sprite, call `list_sprites` and select an obvious match; ask only when more than one plausible target remains.
 

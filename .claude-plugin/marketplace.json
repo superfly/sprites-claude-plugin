@@ -30,7 +30,9 @@
         "cloud",
         "machines",
         "sprites",
-        "mcp"
+        "mcp",
+        "postgres",
+        "managed-postgres"
       ]
     }
   ]

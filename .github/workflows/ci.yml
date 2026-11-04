@@ -45,11 +45,9 @@ jobs:
         with:
           node-version: "22"
 
-      # 2.1.287 is the first release with mods generally available: older
-      # validators reject the manifest's `types` contract, though older clients
-      # still load the plugin and ignore its hooks module.
+      # 2.1.299 discovers types/index.d.ts without a manifest `types` field.
       - name: Install Claude Code CLI
-        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.287
+        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.299
 
       - name: Validate plugin and marketplace manifests
         env:
@@ -65,3 +63,14 @@ jobs:
         run: |
           claude plugin test ./plugins/sprites
           claude plugin test ./plugins/fly
+
+      # Sprites still documents 2.1.287, the first release with mods generally
+      # available, as its minimum.
+      - name: Check Sprites on its minimum Claude Code
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude-config-minimum
+        run: |
+          npm install --prefix "$RUNNER_TEMP/claude-minimum" --no-fund --no-audit @anthropic-ai/claude-code@2.1.287
+          claude_minimum="$RUNNER_TEMP/claude-minimum/node_modules/.bin/claude"
+          "$claude_minimum" plugin validate ./plugins/sprites --strict
+          "$claude_minimum" plugin test ./plugins/sprites

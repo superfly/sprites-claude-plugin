@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "fly",
   "displayName": "Fly",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Manage Fly.io apps, Machines, volumes, secrets, Managed Postgres, and Sprites through the hosted Fly MCP server.",
   "author": {
     "name": "Fly.io",
@@ -10,9 +10,9 @@
     "url": "https://fly.io"
   },
   "homepage": "https://mcp.fly.io",
+  "privacyPolicyUrl": "https://fly.io/legal/privacy-policy/",
   "repository": "https://github.com/superfly/sprites-claude-plugin",
   "license": "MIT",
-  "types": "./types/index.d.ts",
   "keywords": [
     "fly",
     "fly.io",

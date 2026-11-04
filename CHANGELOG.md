@@ -9,6 +9,30 @@ This marketplace ships two independent plugins (`fly` and `sprites`). Installing
 Fly does not rename, replace, or migrate Sprites; each keeps its own OAuth
 connection and commands.
 
+## [Fly 1.0.1] - 2026-11-04
+
+Cleanup for directory review. Manifest version `1.0.1`.
+
+### Changed
+
+- The Inspector writes each of its five read-only MCP tool names as a literal at
+  the call
+- The manifest adds `privacyPolicyUrl` and drops the `types` field; the state
+  declarations stay at the default `types/index.d.ts` path
+- The README documents when the Inspector calls each tool, what **Use in chat**
+  appends, how the Python hook works, and why both plugins share a publisher
+
+### Fixed
+
+- A `/fly-sprites-inspector` failure now reports the error instead of advice
+  meant for plugin authors
+
+### Notes
+
+- Validating this manifest needs Claude Code 2.1.299 or later, and CI tests Fly
+  on that release. Releases from 2.1.287 through 2.1.296 still load the plugin,
+  but their validator rejects the manifest
+
 ## [Fly 1.0.0] - 2026-10-28
 
 Initial standalone Fly plugin for Claude Code. Connects to `https://mcp.fly.io`

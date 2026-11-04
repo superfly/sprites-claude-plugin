@@ -84,6 +84,9 @@ for (const [surface, bodyColumns] of [['terminal', 48], ['desktop', 48], ['termi
       return { value: { content: [{ type: 'text', text: `unexpected ${e.tool}` }], isError: true } }
     })
 
+    // Keep refusal coverage independent of the kit's conversation behavior.
+    on('session.append', () => ({ deny: 'Attachment refused by test policy.' }))
+
     const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns }, surface })
     expect(await ui.find({ text: /Press Find/ })).toBeDefined()
 
@@ -101,8 +104,7 @@ for (const [surface, bodyColumns] of [['terminal', 48], ['desktop', 48], ['termi
     // Only mcp-db, which the listing itself calls cold.
     expect(await ui.findAll({ type: 'Text', text: /^cold$/ })).toHaveLength(1)
 
-    // The kit has no conversation to append to, so this exercises the refusal
-    // path; the append itself is checked in a live session.
+    // A refused attachment must leave the selection available to retry.
     await ui.press({ key: 'attach' })
     await clock.settle()
     expect(await ui.find({ text: /Could not attach the Sprite/ })).toBeDefined()
@@ -236,6 +238,67 @@ for (const surface of ['terminal', 'desktop'] as const) {
     expect(calls.at(-1)).toEqual({ prefix: 'other-', continuation_token: '' })
     expect(await ui.find({ key: 'sprite-spr_2' })).toBeDefined()
     expect(await ui.find({ key: 'sprite-spr_1' })).toBeUndefined()
+    await ui.unmount()
+  })
+
+  test(`attaches only the selected Sprite's identity on ${surface}`, async ($, on) => {
+    const clock = mock.clock(on)
+    const appended: string[] = []
+    on('mcp.connect', () => ({ value: { isConnected: true, server: 'plugin:sprites:sprites' } }))
+    on('mcp.call', (_$, e) => {
+      switch (e.tool) {
+        case 'open_sprite_inspector':
+          return { value: result({ sprites: SPRITES, prefix: e.args.prefix, next_continuation_token: null }) }
+        case 'get_sprite_info':
+          return { value: result(SPRITES[0]) }
+        case 'service_list':
+          return { value: result([{ name: 'web', state: { status: 'running' } }], false) }
+        case 'checkpoint_list':
+          return { value: result([], false) }
+        case 'service_logs':
+          return {
+            value: {
+              content: [{ type: 'text', text: '{"type":"stdout","data":"private log line\\n"}\n' }],
+              isError: false,
+            },
+          }
+      }
+      return { value: { content: [{ type: 'text', text: `unexpected ${e.tool}` }], isError: true } }
+    })
+    on('session.append', (_$, e, next) => {
+      for (const block of e.message.content) if (typeof block.text === 'string') appended.push(block.text)
+      return next(e)
+    })
+
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.input({ key: 'prefix', text: 'mcp-' })
+    await clock.settle()
+    await ui.press({ key: 'sprite-spr_1' })
+    await clock.settle()
+    await ui.press({ key: 'runtime' })
+    await clock.settle()
+    await ui.press({ key: 'logs-web' })
+    await clock.settle()
+    expect(await ui.find({ text: /private log line/ })).toBeDefined()
+
+    await ui.press({ key: 'attach' })
+    await clock.settle()
+    // CI also runs this on 2.1.287, whose kit has no conversation and refuses before any hook runs.
+    if (await ui.find({ text: /no implementation for session\.append/ })) {
+      await ui.unmount()
+      return
+    }
+    expect((await ui.find({ key: 'attach' }))?.props.label).toBe('In chat ✓')
+    expect(appended).toHaveLength(1)
+    const identity = appended[0]?.match(/pane: (\{.*?\})\. /)?.[1]
+    expect(JSON.parse(identity ?? 'null')).toEqual({
+      sprite: 'mcp-web',
+      sprite_id: 'spr_1',
+      org_id: 'org_1',
+      organization: 'acme',
+      uri: 'sprites://org/org_1/mcp-web?id=spr_1',
+    })
+    expect(appended[0]).not.toContain('private log line')
     await ui.unmount()
   })
 }

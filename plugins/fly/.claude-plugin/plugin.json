@@ -11,6 +11,7 @@
   },
   "homepage": "https://mcp.fly.io",
   "privacyPolicyUrl": "https://fly.io/legal/privacy-policy/",
+  "termsOfServiceUrl": "https://fly.io/legal/terms-of-service/",
   "repository": "https://github.com/superfly/sprites-claude-plugin",
   "license": "MIT",
   "keywords": [

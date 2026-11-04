@@ -92,7 +92,7 @@ There is no dedicated MCP file-upload tool. Prefer cloning a repository into the
 
 The pane never changes a Sprite. It lists again when it is opened and when it regains focus, and does not poll.
 
-Mods need Claude Code 2.1.287 or later. Older versions load the rest of the plugin and skip the pane. Where nothing can draw a pane, such as the VS Code extension's chat panel or `claude -p`, the command answers with a text listing instead.
+Mods need Claude Code 2.1.287 or later. Older versions load the rest of the plugin and skip the pane. `claude plugin validate` needs 2.1.299 or later for this plugin: earlier validators reject its manifest, though those releases still load the plugin. Where nothing can draw a pane, such as the VS Code extension's chat panel or `claude -p`, the command answers with a text listing instead.
 
 In auto mode, Claude Code puts the pane's MCP calls to the auto-mode classifier, which has no request of yours to judge a button press by, and refuses them. Allow the pane's read-only tools in your settings to use it there:
 
@@ -143,7 +143,7 @@ If Sprites tools are missing:
 
 If the server is present but unauthorized, authenticate it in `/mcp` and retry the original request. Do not install the Sprites CLI, run `sprite login`, add a second MCP server, or paste access tokens into the shell as a workaround.
 
-For development-time validation:
+For development-time validation, with Claude Code 2.1.299 or later:
 
 ```sh
 python3 scripts/check_repository.py

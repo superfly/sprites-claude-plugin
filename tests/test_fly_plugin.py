@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins/fly"
 PREFIX = "mcp__plugin_fly_fly__"
+INSPECTOR_TOOLS = {"open_sprite_inspector", "get_sprite_info", "service_list", "checkpoint_list", "service_logs"}
 
 
 def load_json(path: Path) -> dict:
@@ -66,6 +67,17 @@ class FlyPackagingTests(unittest.TestCase):
             self.assertFalse(path.is_symlink(), str(path))
             if path.suffix in {".ts", ".tsx", ".py", ".json"}:
                 self.assertNotIn("../../sprites", path.read_text())
+
+    def test_manifest_meets_directory_requirements(self) -> None:
+        manifest = load_json(PLUGIN / ".claude-plugin/plugin.json")
+        self.assertNotIn("types", manifest)
+        self.assertEqual(manifest["privacyPolicyUrl"], "https://fly.io/legal/privacy-policy/")
+
+    def test_inspector_mcp_calls_name_literal_tools(self) -> None:
+        register = (PLUGIN / "hooks/register.tsx").read_text()
+        literal_tools = re.findall(r"\.mcp\.call\(\s*\w+,\s*'(\w+)'", register)
+        self.assertEqual(len(literal_tools), register.count(".mcp.call("))
+        self.assertEqual(set(literal_tools), INSPECTOR_TOOLS)
 
     def test_inspector_names_do_not_collide(self) -> None:
         register = (PLUGIN / "hooks/register.tsx").read_text()

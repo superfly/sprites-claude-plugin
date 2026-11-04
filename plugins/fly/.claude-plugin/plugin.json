@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "fly",
-  "displayName": "Fly",
+  "displayName": "Fly.io",
   "version": "1.0.1",
   "description": "Manage Fly.io apps, Machines, volumes, secrets, Managed Postgres, and Sprites through the hosted Fly MCP server.",
   "author": {

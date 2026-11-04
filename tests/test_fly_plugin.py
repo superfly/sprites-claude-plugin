@@ -32,7 +32,7 @@ class FlyPackagingTests(unittest.TestCase):
                 manifest = load_json(folder / ".claude-plugin/plugin.json")
                 self.assertEqual(manifest["name"], name)
                 self.assertNotIn("dependencies", manifest)
-        self.assertEqual(load_json(PLUGIN / ".claude-plugin/plugin.json")["displayName"], "Fly")
+        self.assertEqual(load_json(PLUGIN / ".claude-plugin/plugin.json")["displayName"], "Fly.io")
 
     def test_connections_remain_independent(self) -> None:
         for name, url in [("fly", "https://mcp.fly.io"), ("sprites", "https://sprites.dev/mcp")]:

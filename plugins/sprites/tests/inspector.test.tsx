@@ -84,6 +84,9 @@ for (const [surface, bodyColumns] of [['terminal', 48], ['desktop', 48], ['termi
       return { value: { content: [{ type: 'text', text: `unexpected ${e.tool}` }], isError: true } }
     })
 
+    // Keep refusal coverage independent of the kit's conversation behavior.
+    on('session.append', () => ({ deny: 'Attachment refused by test policy.' }))
+
     const ui = await $.ui.mount({ ...PANE, props: { ...PANE.props, bodyColumns }, surface })
     expect(await ui.find({ text: /Press Find/ })).toBeDefined()
 
@@ -101,8 +104,7 @@ for (const [surface, bodyColumns] of [['terminal', 48], ['desktop', 48], ['termi
     // Only mcp-db, which the listing itself calls cold.
     expect(await ui.findAll({ type: 'Text', text: /^cold$/ })).toHaveLength(1)
 
-    // The kit has no conversation to append to, so this exercises the refusal
-    // path; the append itself is checked in a live session.
+    // A refused attachment must leave the selection available to retry.
     await ui.press({ key: 'attach' })
     await clock.settle()
     expect(await ui.find({ text: /Could not attach the Sprite/ })).toBeDefined()

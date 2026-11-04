@@ -58,9 +58,17 @@ These calls do not require a model-generated tool request. The mod does not exec
 
 The mod's `session.start` handler registers `/fly-sprites-inspector` and resets pending UI requests after reload. Its `command.run` handler handles only that command, and its `ui.render` handler draws only the Inspector pane. **Use in chat** appends a resource identity and instructions to verify it through Fly before operating on it; it does not execute an operation.
 
-The separate Python `PreToolUse` hook reads the proposed tool name and arguments from standard input, checks only the Fly plugin's Claude Code tool namespace, and emits an approval request for the operations described below. It does not run the proposed command, read workspace files, make network requests, or store the input. It adds no package installation step.
+The separate Python `PreToolUse` hook in [scripts/fly_guard.py](scripts/fly_guard.py) reads the proposed tool name and arguments from standard input, checks only the Fly plugin's Claude Code tool namespace, and emits an approval request for the operations described below. It does not run the proposed command, read workspace files, make network requests, or store the input. It adds no package installation step. The hook uses only Python's standard library; it writes either a JSON `ask` decision or no output, leaving Claude's normal permission policy in effect. The directory's shell-script inspection cannot follow this Python implementation, so it requires source review.
 
-The Inspector requires Claude Code 2.1.287 or later. It falls back to a text listing when a pane cannot be drawn. The hook and mod run in Claude Code; they are not a substitute for server authorization on other Claude surfaces. The confirmation hook requires Python 3.
+The Inspector requires Claude Code 2.1.299 or later, which discovers its state declarations at the default `types/index.d.ts` path without a manifest `types` field. It falls back to a text listing when a pane cannot be drawn. The hook and mod run in Claude Code; they are not a substitute for server authorization on other Claude surfaces. The confirmation hook requires Python 3.
+
+### Directory review notes
+
+The Inspector intentionally calls the five tools listed above without a model-generated request. Every MCP call in [hooks/register.tsx](hooks/register.tsx) has a literal tool name from that fixed set. It cannot call command-execution tools or choose a tool named by a server response. All five calls use the plugin's OAuth-authorized `fly` connection at `https://mcp.fly.io`.
+
+The mod reads only its own Inspector session state: the search prefix, pagination token, selected Sprite identity, and selected service name supply the tool arguments listed above. It does not read workspace files, environment variables, credentials, or conversation history. It does not upload the returned logs. **Use in chat** explicitly appends the selected Sprite's name, ID, organization ID/name, and resource URI to the conversation with a request to verify that identity; it does not attach logs or call a tool. Fetching runtime details and logs may wake a Sprite.
+
+This is Fly.io's Fly plugin, published from `superfly/sprites-claude-plugin`. The separate Sprites plugin in this repository is also published by Fly.io. The Fly plugin includes Sprites tools alongside its broader Fly.io resource support. The two plugins deliberately share a publisher, but have different plugin identifiers (`fly` and `sprites`), MCP connections, and command namespaces. This submission is for `plugins/fly`; it does not replace the Sprites listing.
 
 In Claude Code auto mode, Inspector button calls may need explicit permission. Allow only its read-only tools if desired:
 
@@ -88,7 +96,7 @@ See [authentication](skills/fly/references/auth.md), [operational safety](skills
 
 ## Validation
 
-From the repository root, with Claude Code 2.1.287 or later:
+From the repository root, with Claude Code 2.1.299 or later:
 
 ```sh
 python3 scripts/check_repository.py

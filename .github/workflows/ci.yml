@@ -45,11 +45,9 @@ jobs:
         with:
           node-version: "22"
 
-      # 2.1.287 is the first release with mods generally available: older
-      # validators reject the manifest's `types` contract, though older clients
-      # still load the plugin and ignore its hooks module.
+      # 2.1.299 discovers types/index.d.ts without a manifest `types` field.
       - name: Install Claude Code CLI
-        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.287
+        run: npm install --global --no-fund --no-audit @anthropic-ai/claude-code@2.1.299
 
       - name: Validate plugin and marketplace manifests
         env:

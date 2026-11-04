@@ -56,8 +56,7 @@ class FlyPackagingTests(unittest.TestCase):
         self.assertEqual(hook["hooks"][0]["command"], '"${CLAUDE_PLUGIN_ROOT}"/scripts/fly_guard.py')
 
     def test_bundle_is_self_contained(self) -> None:
-        manifest = load_json(PLUGIN / ".claude-plugin/plugin.json")
-        self.assertTrue((PLUGIN / manifest["types"]).is_file())
+        self.assertTrue((PLUGIN / "types/index.d.ts").is_file())
         for required in ["README.md", "LICENSE", "assets/fly-icon.svg", "hooks/register.tsx",
                          "scripts/fly_guard.py", "skills/fly/SKILL.md", "skills/status/SKILL.md",
                          "skills/smoke/SKILL.md"]:

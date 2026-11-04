@@ -71,10 +71,33 @@ async function connection($: EngineInterface): Promise<string> {
   return server
 }
 
-async function call($: EngineInterface, tool: string, args: Record<string, unknown>): Promise<McpToolResult> {
+type InspectorTool = 'open_sprite_inspector' | 'get_sprite_info' | 'service_list' | 'checkpoint_list' | 'service_logs'
+
+async function call($: EngineInterface, tool: InspectorTool, args: Record<string, unknown>): Promise<McpToolResult> {
   let result: McpToolResult
   try {
-    result = await $.mcp.call(await connection($), tool, args)
+    const connected = await connection($)
+    // Keep every permitted tool literal at the API call for directory review.
+    // Neither server responses nor UI state can select an arbitrary MCP tool.
+    switch (tool) {
+      case 'open_sprite_inspector':
+        result = await $.mcp.call(connected, 'open_sprite_inspector', args)
+        break
+      case 'get_sprite_info':
+        result = await $.mcp.call(connected, 'get_sprite_info', args)
+        break
+      case 'service_list':
+        result = await $.mcp.call(connected, 'service_list', args)
+        break
+      case 'checkpoint_list':
+        result = await $.mcp.call(connected, 'checkpoint_list', args)
+        break
+      case 'service_logs':
+        result = await $.mcp.call(connected, 'service_logs', args)
+        break
+      default:
+        throw new Error('Unsupported Inspector tool.')
+    }
   } catch (error) {
     server = undefined
     throw error

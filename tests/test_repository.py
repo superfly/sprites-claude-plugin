@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -9,6 +10,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins/sprites"
+INSPECTOR_TOOLS = {"open_sprite_inspector", "get_sprite_info", "service_list", "checkpoint_list", "service_logs"}
 
 
 def load_json(path: Path) -> dict:
@@ -63,10 +65,20 @@ class ClaudePluginRepositoryTests(unittest.TestCase):
         hooks = load_json(PLUGIN / "hooks/hooks.json")
         self.assertEqual(hooks["modules"], ["./register.tsx"])
         self.assertTrue((PLUGIN / "hooks/register.tsx").is_file())
-        contract = PLUGIN / self.manifest["types"]
+        contract = PLUGIN / "types/index.d.ts"
         self.assertTrue(contract.is_file())
         # The module's $.state keys live under the plugin's own name.
         self.assertIn("sprites: { inspector: InspectorState }", contract.read_text(encoding="utf-8"))
+
+    def test_manifest_meets_directory_requirements(self) -> None:
+        self.assertNotIn("types", self.manifest)
+        self.assertEqual(self.manifest["privacyPolicyUrl"], "https://fly.io/legal/privacy-policy/")
+
+    def test_inspector_mcp_calls_name_literal_tools(self) -> None:
+        register = (PLUGIN / "hooks/register.tsx").read_text(encoding="utf-8")
+        literal_tools = re.findall(r"\.mcp\.call\(\s*\w+,\s*'(\w+)'", register)
+        self.assertEqual(len(literal_tools), register.count(".mcp.call("))
+        self.assertEqual(set(literal_tools), INSPECTOR_TOOLS)
 
 
 class SpritesGuardTests(unittest.TestCase):

@@ -9,6 +9,29 @@ This marketplace ships two independent plugins (`fly` and `sprites`). Installing
 Fly does not rename, replace, or migrate Sprites; each keeps its own OAuth
 connection and commands.
 
+## [Sprites 0.2.1] - 2026-11-04
+
+Cleanup for directory review. Manifest version `0.2.1`.
+
+### Changed
+
+- The Inspector writes each of its five read-only MCP tool names as a literal at
+  the call
+- The manifest adds `privacyPolicyUrl` and `termsOfServiceUrl` and drops the
+  `types` field; the state declarations stay at the default `types/index.d.ts`
+  path
+
+### Fixed
+
+- A `/sprites-inspector` failure now reports the error instead of advice meant
+  for plugin authors
+
+### Notes
+
+- Validating this manifest needs Claude Code 2.1.299 or later, and CI validates
+  Sprites on that release. The Inspector's documented minimum stays 2.1.287: CI
+  still runs its tests there, but that release's validator rejects the manifest
+
 ## [Fly 1.0.1] - 2026-11-04
 
 Cleanup for directory review. Manifest version `1.0.1`.

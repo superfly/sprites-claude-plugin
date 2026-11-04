@@ -71,15 +71,17 @@ async function connection($: EngineInterface): Promise<string> {
   return server
 }
 
-async function call($: EngineInterface, tool: string, args: Record<string, unknown>): Promise<McpToolResult> {
+// Each caller writes its tool as a literal at $.mcp.call for directory review. No
+// tool name passes through here, so server responses and UI state cannot select one.
+async function call($: EngineInterface, request: (connected: string) => Promise<McpToolResult>): Promise<McpToolResult> {
   let result: McpToolResult
   try {
-    result = await $.mcp.call(await connection($), tool, args)
+    result = await request(await connection($))
   } catch (error) {
     server = undefined
     throw error
   }
-  if (result.isError) throw new Error(textOf(result) || `${tool} failed.`)
+  if (result.isError) throw new Error(textOf(result) || 'The Sprites MCP tool call failed.')
   return result
 }
 
@@ -177,7 +179,11 @@ async function loadPage($: EngineInterface, append: boolean, nextPrefix?: string
   }))
   try {
     const page = record(
-      dataOf(await call($, 'open_sprite_inspector', { prefix, continuation_token: append ? (before.cursor ?? '') : '' })),
+      dataOf(
+        await call($, connected =>
+          $.mcp.call(connected, 'open_sprite_inspector', { prefix, continuation_token: append ? (before.cursor ?? '') : '' }),
+        ),
+      ),
     )
     const incoming = listOf(page, 'sprites', 'Sprite listing')
       .map(summary)
@@ -209,7 +215,9 @@ async function refresh($: EngineInterface): Promise<void> {
   if ((await $.clock.now()) - before.listedAt < REFRESH_GAP_MS) return
   const run = ++listRun
   try {
-    const page = record(dataOf(await call($, 'open_sprite_inspector', { prefix: before.prefix, continuation_token: '' })))
+    const page = record(
+      dataOf(await call($, connected => $.mcp.call(connected, 'open_sprite_inspector', { prefix: before.prefix, continuation_token: '' }))),
+    )
     const fresh = listOf(page, 'sprites', 'Sprite listing')
       .map(summary)
       .filter((one): one is SpriteSummary => one !== null)
@@ -240,7 +248,9 @@ async function selectSprite($: EngineInterface, sprite: SpriteSummary): Promise<
   ++logsRun
   await update($, inspector, s => ({ ...s, ...CLEARED, ...info(''), selected: sprite, isChecking: true }))
   try {
-    const checked = summary(dataOf(await call($, 'get_sprite_info', { sprite: sprite.name, sprite_id: sprite.id })))
+    const checked = summary(
+      dataOf(await call($, connected => $.mcp.call(connected, 'get_sprite_info', { sprite: sprite.name, sprite_id: sprite.id }))),
+    )
     if (!checked) throw new Error('Invalid Sprite info response.')
     if (run !== selectRun) return
     // get_sprite_info's status can disagree with the listing's live runtime
@@ -299,7 +309,7 @@ async function loadRuntime($: EngineInterface): Promise<void> {
   await Promise.all([
     (async () => {
       try {
-        const items = listOf(dataOf(await call($, 'service_list', args)), 'services', 'services').map(one => {
+        const items = listOf(dataOf(await call($, connected => $.mcp.call(connected, 'service_list', args))), 'services', 'services').map(one => {
           const v = record(one)
           return { name: str(v.name), status: str(record(v.state).status) || 'unknown' }
         })
@@ -310,7 +320,7 @@ async function loadRuntime($: EngineInterface): Promise<void> {
     })(),
     (async () => {
       try {
-        const items = listOf(dataOf(await call($, 'checkpoint_list', args)), 'checkpoints', 'checkpoints').map(one => {
+        const items = listOf(dataOf(await call($, connected => $.mcp.call(connected, 'checkpoint_list', args))), 'checkpoints', 'checkpoints').map(one => {
           const v = record(one)
           return { id: str(v.id), comment: str(v.comment), created: str(v.create_time) }
         })
@@ -330,13 +340,15 @@ async function loadLogs($: EngineInterface, service: string): Promise<void> {
   const current = () => selection === selectRun && run === logsRun
   await update($, inspector, s => ({ ...s, logs: { service, state: 'loading' as const, text: '' } }))
   try {
-    const result = await call($, 'service_logs', {
-      sprite: selected.name,
-      sprite_id: selected.id,
-      service_name: service,
-      lines: LOG_LINES,
-      duration: '0s',
-    })
+    const result = await call($, connected =>
+      $.mcp.call(connected, 'service_logs', {
+        sprite: selected.name,
+        sprite_id: selected.id,
+        service_name: service,
+        lines: LOG_LINES,
+        duration: '0s',
+      }),
+    )
     // The endpoint streams NDJSON events; `data` carries the output itself.
     const text = printable(
       textOf(result)
@@ -404,7 +416,7 @@ export const register: Register = on => {
     // Opening always lists afresh: statuses change while the pane sits idle.
     if (!before.isListing || prefix) later($, () => loadPage($, false, prefix || undefined))
     return { text: 'Sprite Inspector opened.' }
-  })
+  }).catch((_$, _e, next) => ({ text: `Could not open the Sprite Inspector: ${next.error.message ?? next.error.kind}` }))
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text, Button, Link, Code } = $.ui.resolve(e)

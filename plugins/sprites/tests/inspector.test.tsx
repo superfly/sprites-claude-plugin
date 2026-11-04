@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'claude-code/testing'
-import type { McpToolResult } from 'claude-code'
+import type { CommandRunInput, McpToolResult } from 'claude-code'
 
 const SPRITES = [
   {
@@ -156,6 +156,12 @@ test('says how to sign in when the server needs auth', async ($, on) => {
   await clock.settle()
   expect(await ui.find({ text: /Authenticate it in \/mcp/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('answers with the error when the Inspector cannot open', async $ => {
+  // The kit has no pane host, so $.ui.open rejects. The engine stamps the rest of the input.
+  const { text } = await $.command.run({ command: 'sprites-inspector' } as CommandRunInput)
+  expect(text).toMatch(/^Could not open the Sprite Inspector: /)
 })
 
 for (const surface of ['terminal', 'desktop'] as const) {

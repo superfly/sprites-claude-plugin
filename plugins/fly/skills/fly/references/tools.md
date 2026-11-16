@@ -121,7 +121,7 @@ Tools must be available and authorized by the connection. See the [Managed Postg
 | `destroy_sprite` | Destroy a sprite in the authenticated organization. |
 | `search_sprite_mentions` | Find up to 20 authorized Sprites by name prefix for composer mentions. |
 | `open_sprite_inspector` | Open a read-only Sprite Inspector showing environments, services, checkpoints and recent service logs. Opening only lists metadata; runtime reads are explicit and may wake a Sprite. |
-| `get_sprite_info` | Read authorized Sprite metadata without waking it. Pass sprite_id from a mention or Inspector selection to reject deleted and recreated environments. |
+| `get_sprite_info` | Read authorized Sprite metadata without waking it. Pass sprite_id from a mention or earlier lookup to reject deleted and recreated environments. |
 
 ## Commands and sessions (3 tools)
 

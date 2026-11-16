@@ -9,4 +9,4 @@ Use Sprites services for web servers, workers, databases, daemons, and preview a
 5. Confirm status with `service_get` and inspect `service_logs`.
 6. Report the service name, port, URL, and expected authentication/exposure.
 
-Read logs before restarting or modifying a failing service. Setting `http_port` is what makes a service reachable over HTTP, so the plugin asks for confirmation on that call; explain what the service serves before issuing it. Never expose environment dumps, admin/debug endpoints, arbitrary file browsers, secrets, or unfiltered logs.
+Read logs before restarting or modifying a failing service. Setting `http_port` is what makes a service reachable over HTTP, so explain what the service serves and get the user's confirmation before issuing that call. Never expose environment dumps, admin/debug endpoints, arbitrary file browsers, secrets, or unfiltered logs.

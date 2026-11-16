@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
-import subprocess
 import unittest
 from pathlib import Path
 from urllib.parse import urlparse
@@ -10,7 +8,6 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGIN = ROOT / "plugins/sprites"
-INSPECTOR_TOOLS = {"open_sprite_inspector", "get_sprite_info", "service_list", "checkpoint_list", "service_logs"}
 
 
 def load_json(path: Path) -> dict:
@@ -38,6 +35,10 @@ class ClaudePluginRepositoryTests(unittest.TestCase):
             "https://github.com/superfly/sprites-claude-plugin",
         )
 
+    def test_manifest_meets_directory_requirements(self) -> None:
+        self.assertEqual(self.manifest["privacyPolicyUrl"], "https://fly.io/legal/privacy-policy/")
+        self.assertEqual(self.manifest["termsOfServiceUrl"], "https://fly.io/legal/terms-of-service/")
+
     def test_expected_skills_are_packaged(self) -> None:
         expected = {"smoke", "sprites", "status"}
         actual = {path.parent.name for path in (PLUGIN / "skills").glob("*/SKILL.md")}
@@ -56,111 +57,38 @@ class ClaudePluginRepositoryTests(unittest.TestCase):
             },
         )
 
-    def test_hook_targets_plugin_scoped_server(self) -> None:
-        hooks = load_json(PLUGIN / "hooks/hooks.json")
-        matcher = hooks["hooks"]["PreToolUse"][0]["matcher"]
-        self.assertIn("plugin_sprites_sprites", matcher)
+    def test_ships_no_hooks_or_mods(self) -> None:
+        # The directory accepts hooks and mods only from Verified organizations.
+        for field in ["hooks", "types", "commands", "agents", "monitors"]:
+            self.assertNotIn(field, self.manifest)
+        for folder in ["hooks", "scripts", "types", "tests", "commands", "agents"]:
+            self.assertFalse((PLUGIN / folder).exists(), folder)
+        for path in PLUGIN.rglob("*"):
+            if path.is_file():
+                self.assertNotIn(path.suffix, {".py", ".js", ".mjs", ".ts", ".tsx", ".sh"}, str(path))
 
-    def test_inspector_mod_is_packaged(self) -> None:
-        hooks = load_json(PLUGIN / "hooks/hooks.json")
-        self.assertEqual(hooks["modules"], ["./register.tsx"])
-        self.assertTrue((PLUGIN / "hooks/register.tsx").is_file())
-        contract = PLUGIN / "types/index.d.ts"
-        self.assertTrue(contract.is_file())
-        # The module's $.state keys live under the plugin's own name.
-        self.assertIn("sprites: { inspector: InspectorState }", contract.read_text(encoding="utf-8"))
-
-    def test_manifest_meets_directory_requirements(self) -> None:
-        self.assertNotIn("types", self.manifest)
-        self.assertEqual(self.manifest["privacyPolicyUrl"], "https://fly.io/legal/privacy-policy/")
-
-    def test_inspector_mcp_calls_name_literal_tools(self) -> None:
-        register = (PLUGIN / "hooks/register.tsx").read_text(encoding="utf-8")
-        literal_tools = re.findall(r"\.mcp\.call\(\s*\w+,\s*'(\w+)'", register)
-        self.assertEqual(len(literal_tools), register.count(".mcp.call("))
-        self.assertEqual(set(literal_tools), INSPECTOR_TOOLS)
+    def test_no_docs_point_at_removed_features(self) -> None:
+        for path in [*PLUGIN.rglob("*.md"), ROOT / "README.md"]:
+            text = path.read_text(encoding="utf-8")
+            with self.subTest(path=str(path.relative_to(ROOT))):
+                self.assertNotIn("/sprites-inspector", text)
+                self.assertNotIn("sprites_guard", text)
+                self.assertNotIn("PreToolUse", text)
 
 
-class SpritesGuardTests(unittest.TestCase):
-    guard = PLUGIN / "scripts/sprites_guard.py"
+class SpritesConfirmationGuidanceTests(unittest.TestCase):
+    def test_safety_reference_keeps_former_hook_coverage(self) -> None:
+        safety = (PLUGIN / "skills/sprites/references/safety.md").read_text(encoding="utf-8")
+        section = safety.split("## Confirm first", maxsplit=1)[1].split("\n## ", maxsplit=1)[0]
+        for phrase in ["`destroy_sprite`", "`checkpoint_restore`", "`policy_network_update`",
+                       "`service_create` with an `http_port`", "`exec`", "checkpoint",
+                       "rm -rf", "npm", "pip", "migrations"]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, section)
 
-    def run_guard(self, tool: str, tool_input: dict) -> dict | None:
-        result = subprocess.run(
-            [str(self.guard)],
-            input=json.dumps({"tool_name": tool, "tool_input": tool_input}),
-            text=True,
-            capture_output=True,
-            check=True,
-        )
-        return json.loads(result.stdout) if result.stdout.strip() else None
-
-    def assert_asks(self, result: dict | None) -> None:
-        self.assertIsNotNone(result)
-        output = result["hookSpecificOutput"]
-        self.assertEqual(output["hookEventName"], "PreToolUse")
-        self.assertEqual(output["permissionDecision"], "ask")
-
-    def test_read_only_call_is_unchanged(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__list_sprites",
-            {},
-        )
-        self.assertIsNone(result)
-
-    def test_destroy_requires_confirmation(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__destroy_sprite",
-            {"name": "mcp-test"},
-        )
-        self.assert_asks(result)
-
-    def test_checkpoint_restore_requires_confirmation(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__checkpoint_restore",
-            {"sprite": "mcp-test", "checkpoint_id": "v7"},
-        )
-        self.assert_asks(result)
-
-    def test_network_policy_update_requires_confirmation(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__policy_network_update",
-            {"sprite": "mcp-test", "rules": [{"domain": "example.com", "action": "allow"}]},
-        )
-        self.assert_asks(result)
-
-    def test_package_install_requires_checkpoint_confirmation(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__exec",
-            {"sprite": "mcp-test", "cmd": "npm install"},
-        )
-        self.assert_asks(result)
-
-    def test_service_with_http_port_requires_confirmation(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__service_create",
-            {
-                "sprite": "mcp-test",
-                "service_name": "web",
-                "cmd": "python3",
-                "args": ["-m", "http.server", "3000"],
-                "http_port": 3000,
-            },
-        )
-        self.assert_asks(result)
-
-    def test_service_without_http_port_is_unchanged(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__service_create",
-            {"sprite": "mcp-test", "service_name": "worker", "cmd": "./worker"},
-        )
-        self.assertIsNone(result)
-
-    def test_read_only_service_inspection_is_unchanged(self) -> None:
-        result = self.run_guard(
-            "mcp__plugin_sprites_sprites__service_get",
-            {"sprite": "mcp-test", "service_name": "web"},
-        )
-        self.assertIsNone(result)
+    def test_skill_points_at_the_confirmation_list(self) -> None:
+        skill = (PLUGIN / "skills/sprites/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("references/safety.md#confirm-first", skill)
 
 
 if __name__ == "__main__":

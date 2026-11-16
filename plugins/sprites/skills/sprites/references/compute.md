@@ -22,4 +22,4 @@ Use Sprites for isolated Linux compute: builds, tests, generated or untrusted co
 6. Verify with tests, health checks, `service_get`, or `service_logs`.
 7. Report the Sprite name, commands and exit status, checkpoint ids, services, and URLs.
 
-Use non-interactive command flags so remote executions do not hang. Stop services that are no longer needed. Destroy a Sprite only after explicit user intent and the plugin's confirmation prompt.
+Use non-interactive command flags so remote executions do not hang. Stop services that are no longer needed. Destroy a Sprite only after explicit user intent and the user's confirmation of the exact Sprite.

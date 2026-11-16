@@ -28,7 +28,7 @@ Sprites MCP (`https://sprites.dev/mcp`) exposes **24** tools (see `superfly/spri
 ### Sprites MCP (24)
 
 - List and create: `list_sprites`, `create_sprite`.
-- Destroy: `destroy_sprite`, only after explicit delete/destroy/remove intent and the plugin confirmation prompt.
+- Destroy: `destroy_sprite`, only after explicit delete/destroy/remove intent and the user's confirmation of the exact Sprite (see [safety](references/safety.md#confirm-first)).
 - One-off commands: `exec`; inspect or stop sessions with `exec_list` and `exec_kill`.
 - Files: `file_list`, `file_read`, `file_write`, `file_copy`, `file_rename`, `file_delete` (`workingDir` + path flags per live schema).
 - Services: `service_list`, `service_get`, `service_create`, `service_start`, `service_stop`, and `service_logs`.
@@ -42,7 +42,7 @@ Sprites MCP (`https://sprites.dev/mcp`) exposes **24** tools (see `superfly/spri
 
 Sprite-scoped tools take a `sprite` parameter naming the target; `create_sprite` and `destroy_sprite` take `name`. If the user did not specify a Sprite, call `list_sprites` and select an obvious match; ask only when more than one plausible target remains.
 
-The Sprite Inspector pane (`/sprites-inspector`) can attach a Sprite to the conversation as a note naming its `sprite` and `sprite_id`. The most recent note is the user's "this Sprite". Pass that `sprite_id` alongside `sprite` on Sprite-scoped calls: the server then rejects a Sprite that was deleted and recreated under the same name instead of operating on the wrong one. Never substitute a different Sprite for an attached one.
+When a mention or an earlier lookup gives a `sprite_id`, pass it alongside `sprite` on Sprite-scoped calls: the server then rejects a Sprite that was deleted and recreated under the same name instead of operating on the wrong one. Never substitute a different Sprite after a stale identity error; look it up again.
 
 Sprite-level tools are generated from the Sprite environment API and can change between versions. Treat the tools actually offered in the session as authoritative: if a name above is missing, use the closest available tool rather than insisting on this list, and if an unfamiliar tool appears, read its schema instead of assuming it is unsupported.
 

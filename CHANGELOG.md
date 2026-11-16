@@ -9,6 +9,17 @@ This marketplace ships two independent plugins (`fly` and `sprites`). Installing
 Fly does not rename, replace, or migrate Sprites; each keeps its own OAuth
 connection and commands.
 
+## [Fly 2.0.1] - 2026-11-16
+
+Resubmission for directory review, which accepts only Markdown, text, JSON,
+YAML, and PNG, JPEG, GIF, WebP, or ICO images from organizations that are not
+Verified. Manifest version `2.0.1`.
+
+### Removed
+
+- `assets/fly-icon.svg`; the README now shows the bundled
+  `.claude-plugin/icon.png`
+
 ## [Sprites 0.3.0] - 2026-11-16
 
 Prepared for directory submission, which accepts hooks and mods only from

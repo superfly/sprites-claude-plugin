@@ -9,6 +9,48 @@ This marketplace ships two independent plugins (`fly` and `sprites`). Installing
 Fly does not rename, replace, or migrate Sprites; each keeps its own OAuth
 connection and commands.
 
+## [Sprites 0.3.0] - 2026-11-16
+
+Prepared for directory submission, which accepts hooks and mods only from
+Verified organizations. Manifest version `0.3.0`.
+
+### Removed
+
+- The `PreToolUse` confirmation hook (`hooks/hooks.json`,
+  `scripts/sprites_guard.py`)
+- The Sprite Inspector mod and its `/sprites-inspector` command
+  (`hooks/register.tsx`, `types/index.d.ts`, `tests/inspector.test.tsx`)
+
+### Changed
+
+- The `sprites` skill's safety reference names each tool call that needs the
+  user's approval and when to checkpoint first. This is guidance to Claude
+  rather than an enforced prompt; Claude Code's tool approvals and the server's
+  authorization still apply
+- The plugin no longer needs Python 3 or Claude Code 2.1.287 for the Inspector
+  pane
+
+## [Fly 2.0.0] - 2026-11-16
+
+Resubmission for directory review, which accepts hooks and mods only from
+Verified organizations. Manifest version `2.0.0`.
+
+### Removed
+
+- The `PreToolUse` confirmation hook (`hooks/hooks.json`,
+  `scripts/fly_guard.py`)
+- The Sprite Inspector mod and its `/fly-sprites-inspector` command
+  (`hooks/register.tsx`, `types/index.d.ts`, `tests/inspector.test.tsx`)
+
+### Changed
+
+- The `fly` skill's safety reference now lists every operation the hook used
+  to confirm, and tells Claude to get the user's approval before each one.
+  This is guidance to Claude rather than an enforced prompt; Claude Code's tool
+  approvals and Fly's server-side authorization still apply
+- The plugin no longer needs Python 3 or a minimum Claude Code release for the
+  Inspector pane
+
 ## [Sprites 0.2.1] - 2026-11-04
 
 Cleanup for directory review. Manifest version `0.2.1`.

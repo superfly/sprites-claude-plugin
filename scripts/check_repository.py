@@ -105,10 +105,6 @@ def main() -> int:
         if path.name == "SKILL.md":
             validate_skill(path, text, errors)
 
-    for guard in (ROOT / "plugins").glob("*/scripts/*_guard.py"):
-        if not guard.stat().st_mode & 0o111:
-            errors.append(f"{guard.relative_to(ROOT)}: hook script is not executable")
-
     if errors:
         print("Repository validation failed:", file=sys.stderr)
         for error in errors:

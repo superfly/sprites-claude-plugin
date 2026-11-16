@@ -4,13 +4,17 @@ Sprites are persistent environments. Files, packages, databases, services, check
 
 ## Confirm first
 
-- Destroying a Sprite, which permanently deletes its state, services, checkpoints, and URL.
-- Restoring a checkpoint, which discards filesystem state created after it.
-- Changing the outbound network policy with `policy_network_update`.
-- Creating a service with an `http_port`, which puts it behind the Sprite's URL.
-- Broad destructive filesystem or database commands.
+Before each of these calls, tell the user the exact Sprite and the impact, then wait for their explicit approval in the conversation. A request that already names the operation and the exact Sprite counts as approval for that call only; it does not cover a later call or a different Sprite.
 
-The plugin's `PreToolUse` hook requests confirmation for these operations and nudges checkpoint creation before risky `exec` commands. Still explain the exact Sprite and impact before issuing the tool call.
+- `destroy_sprite`, which permanently deletes the Sprite's state, services, checkpoints, and URL.
+- `checkpoint_restore`, which discards filesystem state created after the checkpoint.
+- `policy_network_update`, which replaces the whole outbound network policy.
+- `service_create` with an `http_port`, which puts the service behind the Sprite's URL.
+- `exec` running broad destructive filesystem or database commands, such as `rm -rf`, `DROP DATABASE`, `TRUNCATE TABLE`, or a bulk `DELETE FROM`.
+
+Before `exec` runs package installs or upgrades (`npm`, `pnpm`, `yarn`, `pip`, `uv`, `apt`, `dnf`, `apk`) or database migrations, create or verify a recent checkpoint.
+
+These are instructions to Claude, not an enforced control. Claude Code's tool approvals and the server's authorization still apply. Reason about the actual operation: a different shell command can have the same effect as one listed here.
 
 ## Checkpoint first
 

@@ -6,7 +6,7 @@ Sprites are persistent remote Linux environments, separate from the local worksp
 
 Call `get_fly_context` and inspect the Sprites binding and restrictions. Use `list_sprites`, `search_sprite_mentions`, or `open_sprite_inspector` for discovery. Follow continuation tokens when more results are available; a partial page is not the full inventory. Use `get_sprite_info` for metadata without waking the Sprite.
 
-The `/fly-sprites-inspector` pane's most recent selection names a `sprite` and `sprite_id`. Pass that ID alongside the name on Sprite-scoped tools so a deleted and recreated environment is rejected. Do not substitute another Sprite after a stale identity error; select again. Runtime reads, logs, and file operations may wake a Sprite, so request them deliberately.
+When a mention or an earlier lookup gives a `sprite_id`, pass it alongside the name on Sprite-scoped tools so a deleted and recreated environment is rejected. Do not substitute another Sprite after a stale identity error; look it up again. Runtime reads, logs, and file operations may wake a Sprite, so request them deliberately.
 
 Reuse an obvious task environment when suitable. For `create_sprite`, check the required prefix and creation cap first. Creation and destruction use `name`; Sprite-scoped tools use `sprite`. `destroy_sprite` requires explicit intent and confirmation of the exact target.
 
@@ -31,7 +31,7 @@ For repositories, cloning is usually simpler than transferring many individual f
 
 Use `service_list` and `service_get` before changing existing work. `service_create` creates or updates a service definition; use `service_start` and `service_stop` for lifecycle, and `service_logs` for bounded inspection. Prefer services over a forever-running `exec`.
 
-Setting `http_port` exposes the service through the Sprite URL and triggers confirmation. Without it, the proxy may still route to port 8080: omitting `http_port` is not proof that a service is unreachable. Check existing routing and URL authentication. Never expose arbitrary files, environment dumps, credentials, admin/debug endpoints, or raw logs.
+Setting `http_port` exposes the service through the Sprite URL, so confirm it with the user first. Without it, the proxy may still route to port 8080: omitting `http_port` is not proof that a service is unreachable. Check existing routing and URL authentication. Never expose arbitrary files, environment dumps, credentials, admin/debug endpoints, or raw logs.
 
 ## Checkpoints and policy
 

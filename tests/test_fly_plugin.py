@@ -63,7 +63,7 @@ class FlyPackagingTests(unittest.TestCase):
                 })
 
     def test_bundle_is_self_contained(self) -> None:
-        for required in ["README.md", "LICENSE", ".claude-plugin/icon.png", "assets/fly-icon.svg",
+        for required in ["README.md", "LICENSE", ".claude-plugin/icon.png",
                          "skills/fly/SKILL.md", "skills/status/SKILL.md", "skills/smoke/SKILL.md"]:
             self.assertTrue((PLUGIN / required).is_file(), required)
         for path in PLUGIN.rglob("*"):
@@ -81,8 +81,14 @@ class FlyPackagingTests(unittest.TestCase):
         tracked = [path for path in PLUGIN.rglob("*")
                    if path.is_file() and ".claude-plugin/types" not in path.as_posix()
                    and path.name != "tsconfig.json"]
+        # The directory accepts only Markdown, text, JSON, YAML, and PNG, JPEG, GIF,
+        # WebP, or ICO images from organizations that are not Verified.
+        allowed = {".md", ".txt", ".json", ".yaml", ".yml", ".png", ".jpg", ".jpeg", ".gif",
+                   ".webp", ".ico"}
         for path in tracked:
-            self.assertNotIn(path.suffix, {".py", ".js", ".mjs", ".ts", ".tsx", ".sh"}, str(path))
+            with self.subTest(path=str(path.relative_to(PLUGIN))):
+                self.assertTrue(path.suffix.lower() in allowed or path.name == "LICENSE")
+                self.assertFalse(path.read_bytes().startswith(b"#!"))
 
     def test_manifest_meets_directory_requirements(self) -> None:
         manifest = load_json(PLUGIN / ".claude-plugin/plugin.json")

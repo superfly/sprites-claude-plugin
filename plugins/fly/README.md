@@ -1,4 +1,4 @@
-![Fly.io](assets/fly-icon.svg)
+<img src=".claude-plugin/icon.png" alt="Fly.io" width="72" height="72">
 
 # Fly
 
